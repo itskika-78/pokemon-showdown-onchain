@@ -46,7 +46,8 @@ persistent process: **Render, Railway, Fly.io, a VPS, or any container host**
   | Var | Example / note |
   | --- | --- |
   | `NODE_ENV` | `production` (Vercel sets this) |
-  | `JWT_SECRET` | strong random 32+ chars — **must match the battle service** |
+  | `JWT_SECRET` | strong random 32+ chars — **must match the battle service**. In prod the server **throws on startup** if left at the dev default |
+  | `LOG_SIGNING_SECRET` | strong random 32+ chars — **required in prod** (server throws on startup otherwise) |
   | `DATABASE_URL` | pooled Postgres URL |
   | `REDIS_URL` | Upstash Redis URL (`rediss://…`) |
   | `PG_POOL_MAX` | `1`–`3` (serverless — keep small) |
