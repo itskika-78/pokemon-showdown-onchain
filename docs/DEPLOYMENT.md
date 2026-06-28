@@ -51,18 +51,30 @@ persistent process: **Render, Railway, Fly.io, a VPS, or any container host**
   | `REDIS_URL` | Upstash Redis URL (`rediss://…`) |
   | `PG_POOL_MAX` | `1`–`3` (serverless — keep small) |
   | `USE_MOCK_DAS` | `false` for real cNFTs |
-  | `HELIUS_RPC_URL` | mainnet Helius DAS URL (with `?api-key=`) |
-  | `HELIUS_DEVNET_RPC_URL` | devnet Helius DAS URL |
+  | `HELIUS_RPC_URL` | mainnet Helius URL (with `?api-key=`) — **server-only, never `NEXT_PUBLIC_`**. Used for DAS *and* injected by the `/api/rpc` wallet proxy. |
+  | `HELIUS_DEVNET_RPC_URL` | devnet Helius URL (with `?api-key=`) — server-only |
   | `PHYGITALS_COLLECTION_MINTS` | `BSG6DyEihFFtfvxtL9mKYsvTwiZXB1rq5gARMTJC2xAM` |
   | `TREASURY_WALLET` | `21vUy4XiTRGhrRF7EwaagRHspvk6zQzzfWahuPXpTwEo` |
   | `SIWS_DOMAIN` / `SIWS_URI` | your production domain / URL |
   | `HELIUS_WEBHOOK_SECRET` | shared secret for the `/webhooks/helius` endpoint |
+  | `NEXT_PUBLIC_API_URL` | **your deployed site URL** (e.g. `https://yourapp.com`) — the browser wallet builds its RPC endpoint as `${NEXT_PUBLIC_API_URL}/api/rpc`, so this must be set |
   | `NEXT_PUBLIC_WS_URL` | **the battle-service public URL** (e.g. `https://battle.yourapp.com`) |
-  | `NEXT_PUBLIC_HELIUS_RPC_URL` | public RPC for the wallet/client |
+  | `NEXT_PUBLIC_HELIUS_RPC_URL` | **public, key-free** RPC only (SSR fallback). The wallet normally goes through `/api/rpc`; never put a Helius key here |
   | `NEXT_PUBLIC_SOLANA_CLUSTER` | `mainnet-beta` |
   | `NEXT_PUBLIC_TREASURY_WALLET` | same treasury address |
 
   `NEXT_PUBLIC_*` are build-time — set them before the build.
+
+### How the Helius key stays hidden
+
+The browser wallet's `ConnectionProvider` points at a **same-origin proxy**
+(`/api/rpc?cluster=…`), not at Helius directly. The proxy (`apps/web/src/app/api/rpc/route.ts`)
+runs server-side, injects the keyed `HELIUS_RPC_URL` / `HELIUS_DEVNET_RPC_URL`, and
+returns the JSON-RPC response — so the API key is **never in the client bundle**. The
+proxy is rate-limited per IP and restricted to an allow-list of read/transaction
+methods so it can't be abused as a free public Helius gateway. Verify after deploy:
+`curl -s https://yourapp.com/api/rpc -X POST -H 'content-type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"getVersion"}'` returns a result, and the served JS
+contains no `helius-rpc.com` / `api-key=` strings.
 
 ## 3. Deploy the battle service (separate host)
 
