@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@battler/web", "dev"],
+      "autoPort": false,
+      "port": 3000
+    }
+  ]
+}

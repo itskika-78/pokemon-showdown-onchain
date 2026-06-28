@@ -1,0 +1,215 @@
+/* ============================================================================
+   GLOBAL OVERWORLD THEME — applies the 16-bit parchment pixel-art look to
+   EVERY page, not just the landing. Loaded LAST in layout.tsx so it overrides
+   globals.css and the bespoke pokedex.css theme.
+
+   Strategy: re-map the global design tokens to the parchment palette, swap the
+   display/UI font to the pixel fonts (Pixelify Sans / Silkscreen, already
+   @imported by overworld.css), and re-skin the shared primitives (nav, buttons,
+   panels, cards, inputs, pills, badges, segmented, alerts) with chunky 3px ink
+   borders + hard offset shadows + sharp corners. Body copy stays Inter for
+   legibility. The `.ow-*` landing classes are untouched (own `--ow-*` vars).
+   ============================================================================ */
+
+:root {
+  --ink:#1c1813; --text:#1c1813;
+  --bg:#e9e3d1; --bg-2:#efeada;
+  --panel:#f3eee0; --panel-2:#efeada; --panel-3:#e3dcc7;
+  --muted:#6b6253;
+  --accent:#e8472b; --accent-ink:#ffffff;
+  --accent-2:#1c1813; --accent-2-ink:#ffffff;
+  --red:#e8472b; --red-2:#c43a20; --red-3:#a32f1a;
+  --good:#3e7d3a; --danger:#c43a20; --gold:#e6a32c; --blue:#2f6fd6; --green:#3e7d3a;
+  --border:#1c1813; --border-soft:#c7bda6;
+  --navy:#1c1813; --navy-2:#16120d; --navy-3:#2a241c; --panel-dark:#1c1813;
+  --radius:4px; --radius-lg:6px;
+  --sh:4px 4px 0 0 #1c1813;
+  --sh-lg:8px 8px 0 0 #1c1813;
+  --shadow:8px 8px 0 0 #1c1813;
+  --shadow-sm:3px 3px 0 0 #1c1813;
+  --edge:0 0 0 0 transparent;
+  --pixel:'Pixelify Sans', system-ui, sans-serif;
+  --mono-px:'Silkscreen', monospace;
+}
+
+/* ---- parchment canvas; kill the old radial-glow bg + decorative poke-bg ---- */
+html, body {
+  background:
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.012) 0 2px, transparent 2px 4px),
+    radial-gradient(120% 80% at 50% -8%, #efeada, #e9e3d1 72%) !important;
+  background-attachment: fixed;
+  color: var(--ink);
+}
+.poke-bg { display: none !important; }
+
+/* ---- pixel display type for headings + chrome (body copy stays Inter) ---- */
+h1, h2, h3, h4, .brand, .btn, .navlink, .badge, .pill, button, .segmented button {
+  font-family: var(--pixel) !important;
+  letter-spacing: 0.01em;
+}
+a { color: var(--red); }
+a:hover { text-decoration: underline; }
+
+/* ---- nav ---- */
+.nav {
+  background: var(--bg) !important;
+  border-bottom: 3px solid var(--ink) !important;
+  box-shadow: 0 3px 0 0 rgba(28,24,19,0.10) !important;
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+}
+.nav .brand { color: var(--ink) !important; }
+.brand-chain {
+  color: var(--red) !important; background: none !important;
+  -webkit-text-fill-color: var(--red) !important; background-clip: border-box !important;
+}
+.navlink {
+  color: #3a342b !important; border: 2px solid transparent !important; border-radius: 3px !important;
+  font-size: 12px; text-transform: uppercase; transition: transform .08s steps(2), background .1s, border-color .1s !important;
+}
+.navlink:hover {
+  color: var(--ink) !important; background: var(--panel-2) !important;
+  border-color: var(--ink) !important; transform: none !important; box-shadow: none !important;
+}
+.navlink.active {
+  background: var(--red) !important; color: #fff !important;
+  border-color: var(--ink) !important; box-shadow: 2px 2px 0 0 var(--ink) !important;
+}
+
+/* ---- buttons (chunky hard-shadow pixel) ---- */
+.btn {
+  background: var(--ink); color: #fff;
+  border: 3px solid var(--ink) !important; border-radius: 4px !important;
+  box-shadow: var(--sh) !important; overflow: visible;
+  transition: transform .08s steps(2), box-shadow .08s steps(2) !important;
+}
+.btn::after { display: none !important; }                 /* kill the gloss sweep */
+.btn:hover:not(:disabled) { transform: translate(2px,2px) !important; box-shadow: 2px 2px 0 0 var(--ink) !important; filter: none !important; }
+.btn:active:not(:disabled) { transform: translate(4px,4px) !important; box-shadow: 0 0 0 0 var(--ink) !important; }
+.btn.accent { background: var(--red); color: #fff; }
+.btn.secondary { background: var(--panel-2); color: var(--ink); }
+.btn.ghost { background: var(--panel); color: var(--ink); box-shadow: var(--sh) !important; }
+.btn.ghost:hover:not(:disabled) { background: var(--panel-2); }
+.btn.danger { background: var(--red); color: #fff; }
+.btn.dark { background: var(--ink); color: #fff; }
+.btn.gold { background: var(--gold) !important; color: var(--ink) !important; }
+.btn.glow { animation: none !important; }
+.btn:disabled { opacity: 0.45; box-shadow: 2px 2px 0 0 var(--ink) !important; }
+
+/* ---- panels / containers ---- */
+.panel {
+  background: var(--panel) !important; border: 3px solid var(--ink) !important;
+  border-radius: 6px !important; box-shadow: var(--sh) !important;
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+}
+.panel.dark { background: var(--ink) !important; color: #efeada !important; }
+.panel.dark .muted { color: #c7bda6 !important; }
+
+/* ---- forms ---- */
+.input, .select, textarea.input {
+  background: #fffdf6 !important; border: 3px solid var(--ink) !important; border-radius: 4px !important;
+  box-shadow: 3px 3px 0 0 var(--ink) !important; color: var(--ink) !important;
+  font-family: 'Inter', sans-serif !important;
+}
+.input:focus, .select:focus, textarea.input:focus { outline: none; transform: translate(-1px,-1px); box-shadow: 4px 4px 0 0 var(--ink) !important; }
+.field label { font-family: var(--pixel); }
+
+/* ---- toggle ---- */
+.switch .track { border: 3px solid var(--ink); border-radius: 4px; background: var(--panel-2); }
+.switch .thumb { border-radius: 0; background: var(--ink); }
+.switch input:checked + .track { background: var(--red); }
+
+/* ---- segmented control ---- */
+.segmented {
+  background: var(--panel-2) !important; border: 3px solid var(--ink) !important;
+  border-radius: 5px !important; box-shadow: 3px 3px 0 0 var(--ink) !important;
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+}
+.segmented button { border-radius: 3px !important; color: var(--ink); }
+.segmented button.on { background: var(--red) !important; color: #fff !important; border-color: var(--ink) !important; box-shadow: 2px 2px 0 0 var(--ink) !important; }
+.segmented button:not(.on):hover { background: var(--panel-3); }
+
+/* ---- badges + pills ---- */
+.badge { border: 3px solid var(--ink) !important; border-radius: 3px !important; background: var(--panel-2); color: var(--ink); }
+.badge.accent { background: var(--red); color: #fff; }
+.badge.good { background: var(--good); color: #fff; }
+.pill {
+  border: 3px solid var(--ink) !important; border-radius: 3px !important;
+  box-shadow: 3px 3px 0 0 var(--ink) !important; text-transform: uppercase;
+}
+.pill .dot { border-radius: 0 !important; }
+.pill.mock { background: var(--red); color: #fff; }
+.pill.devnet { background: var(--blue); color: #fff; }
+.pill.mainnet { background: var(--good); color: #fff; }
+
+/* ---- alerts ---- */
+.alert { border: 3px solid var(--ink) !important; border-radius: 4px !important; box-shadow: 3px 3px 0 0 var(--ink) !important; }
+.alert.danger { background: #f6d9cf !important; }
+.alert.info  { background: #d6e3f7 !important; }
+.alert.warn  { background: #f3e6cf !important; }
+.alert.good  { background: #d8ead0 !important; }
+
+/* ---- misc ---- */
+.divider { background: var(--ink) !important; height: 3px; opacity: 0.5; }
+.net-card { background: var(--panel) !important; border: 3px solid var(--ink) !important; border-radius: 6px !important; box-shadow: var(--sh) !important; }
+.net-card.on { background: var(--panel-2) !important; box-shadow: var(--sh-lg) !important; }
+.net-chip { border-radius: 3px !important; }
+.addr-chip { border: 3px solid var(--ink) !important; border-radius: 4px !important; background: var(--panel-2) !important; }
+
+/* ============================================================================
+   POKÉDEX — repoint the bespoke navy/black theme to parchment + pixel
+   ============================================================================ */
+.pdx {
+  --pdx-navy:#e9e3d1; --pdx-navy-2:#efeada; --pdx-indigo:#efeada;
+  --pdx-ink:#1c1813; --pdx-mut:#6b6253; --pdx-mut-2:#8a8170;
+  --pdx-line:rgba(28,24,19,0.18);
+  --pdx-gold:#e8472b; --pdx-gold-2:#c43a20; --pdx-red:#e8472b; --pdx-blue:#2f6fd6;
+}
+.pdx-bg { background: radial-gradient(120% 80% at 50% -8%, #efeada, #e9e3d1 72%) !important; }
+.pdx-bg-grid {
+  opacity: 0.05 !important;
+  background-image:
+    linear-gradient(45deg, rgba(28,24,19,0.5) 1px, transparent 1px),
+    linear-gradient(-45deg, rgba(28,24,19,0.5) 1px, transparent 1px) !important;
+}
+.pdx-bg-glow { display: none !important; }
+.pdx-title { color: var(--ink) !important; font-family: var(--pixel) !important; text-shadow: 4px 4px 0 rgba(28,24,19,0.14) !important; }
+.pdx-title span { -webkit-text-fill-color: var(--red) !important; background: none !important; animation: none !important; }
+.pdx-lede, .pdx-count { color: var(--muted) !important; }
+.pdx-kicker { color: var(--ink) !important; background: var(--panel-2) !important; border: 3px solid var(--ink) !important; border-radius: 3px !important; font-family: var(--pixel) !important; }
+.pdx-kicker-dot { box-shadow: none !important; background: var(--red); }
+.pdx-search { background: #fffdf6 !important; border: 3px solid var(--ink) !important; border-radius: 5px !important; box-shadow: 4px 4px 0 0 var(--ink) !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+.pdx-search input { color: var(--ink) !important; font-family: 'Inter', sans-serif !important; }
+.pdx-search input::placeholder { color: var(--muted) !important; }
+.pdx-search-clear { background: var(--panel-2) !important; color: var(--ink) !important; }
+.pdx-pill { color: var(--ink) !important; background: var(--panel) !important; border: 3px solid var(--ink) !important; border-radius: 3px !important; font-family: var(--pixel) !important; }
+.pdx-pill:hover { color: var(--ink) !important; border-color: var(--ink) !important; }
+.pdx-pill.on { color: #fff !important; background: var(--red) !important; border-color: var(--ink) !important; box-shadow: 3px 3px 0 0 var(--ink) !important; }
+.pdx-card-inner { background: var(--panel-3) !important; border: 3px solid var(--ink) !important; border-radius: 6px !important; box-shadow: 5px 5px 0 0 var(--ink) !important; }
+.pdx-card:hover .pdx-card-inner { transform: translate(-2px,-2px) !important; box-shadow: 7px 7px 0 0 var(--ink) !important; }
+.pdx-card-name { color: var(--ink) !important; font-family: var(--pixel) !important; }
+.pdx-card-sub { color: var(--muted) !important; }
+.pdx-card-shine { opacity: 0 !important; }
+.pdx-hero-rule { background: var(--ink) !important; box-shadow: none !important; height: 3px !important; }
+.reel-card img { background: var(--panel-3) !important; border: 3px solid var(--ink); border-radius: 6px !important; box-shadow: 6px 6px 0 0 var(--ink) !important; }
+.reel-card-glow { display: none !important; }
+.reel-card figcaption { color: var(--ink) !important; font-family: var(--pixel) !important; }
+.pdx-btn-load { color: #fff !important; background: var(--blue) !important; border: 3px solid var(--ink) !important; border-radius: 4px !important; box-shadow: 4px 4px 0 0 var(--ink) !important; }
+.pdx-btn-accent { color: #fff !important; background: var(--red) !important; border: 3px solid var(--ink) !important; border-radius: 4px !important; box-shadow: 4px 4px 0 0 var(--ink) !important; }
+.pdx-btn:hover:not(:disabled) { transform: translate(2px,2px) !important; box-shadow: 2px 2px 0 0 var(--ink) !important; filter: none !important; }
+/* pokedex lightbox → parchment */
+.pdx-lightbox-backdrop { background: rgba(28,24,19,0.5) !important; -webkit-backdrop-filter: blur(4px) !important; backdrop-filter: blur(4px) !important; }
+.pdx-lightbox-panel { background: var(--panel) !important; border: 4px solid var(--ink) !important; border-radius: 8px !important; box-shadow: 10px 10px 0 0 var(--ink) !important; }
+.pdx-lightbox-meta h3 { color: var(--ink) !important; font-family: var(--pixel) !important; }
+.pdx-eyebrow { color: var(--muted) !important; }
+.pdx-lightbox-close, .pdx-pc-close { background: var(--panel-2) !important; border: 3px solid var(--ink) !important; color: var(--ink) !important; border-radius: 4px !important; }
+.pdx-lightbox-close:hover, .pdx-pc-close:hover { background: var(--red) !important; color: #fff !important; }
+.pdx-tag { color: #fff !important; background: var(--red) !important; border: 2px solid var(--ink) !important; border-radius: 3px !important; }
+.pdx-tag.ghost { color: var(--ink) !important; background: var(--panel-2) !important; }
+
+/* pokedex nav → parchment (override the route's black nav) */
+body:has(.pdx) { background: #e9e3d1 !important; }
+body:has(.pdx) .nav { background: var(--bg) !important; border-bottom: 3px solid var(--ink) !important; box-shadow: 0 3px 0 0 rgba(28,24,19,0.10) !important; }
+body:has(.pdx) .nav .brand { color: var(--ink) !important; }
+body:has(.pdx) .nav .navlink { color: #3a342b !important; }
+body:has(.pdx) .nav .navlink:hover { color: var(--ink) !important; background: var(--panel-2) !important; }
+body:has(.pdx) .nav .navlink.active { color: #fff !important; background: var(--red) !important; }

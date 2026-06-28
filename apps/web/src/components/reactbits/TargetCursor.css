@@ -1,0 +1,91 @@
+.target-cursor-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+}
+
+.target-cursor-dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  background: var(--ink, #0a0a0c);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  will-change: transform;
+}
+
+.target-cursor-corner {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--ink, #0a0a0c);
+  will-change: transform;
+}
+
+.corner-tl {
+  transform: translate(-150%, -150%);
+  border-right: none;
+  border-bottom: none;
+}
+
+.corner-tr {
+  transform: translate(50%, -150%);
+  border-left: none;
+  border-bottom: none;
+}
+
+.corner-br {
+  transform: translate(50%, 50%);
+  border-left: none;
+  border-top: none;
+}
+
+.corner-bl {
+  transform: translate(-150%, 50%);
+  border-right: none;
+  border-top: none;
+}
+
+@media (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  html,
+  body,
+  a,
+  button,
+  .btn,
+  .navlink,
+  .bottom-nav-link,
+  [role='button'],
+  label.switch {
+    cursor: none !important;
+  }
+
+  input[type='text'],
+  input[type='number'],
+  input[type='search'],
+  textarea,
+  select,
+  [contenteditable='true'] {
+    cursor: text !important;
+  }
+}
+
+@media (pointer: coarse) {
+  .target-cursor-wrapper {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .target-cursor-wrapper {
+    display: none;
+  }
+}

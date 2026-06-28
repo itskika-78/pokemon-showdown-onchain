@@ -1,0 +1,22 @@
+{
+  "name": "@battler/ingest",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc -b"
+  },
+  "dependencies": {
+    "@battler/battle-engine": "workspace:*",
+    "@battler/card-parser": "workspace:*",
+    "@battler/core": "workspace:*",
+    "@battler/das": "workspace:*",
+    "@battler/repositories": "workspace:*",
+    "@battler/server-kit": "workspace:*"
+  }
+}

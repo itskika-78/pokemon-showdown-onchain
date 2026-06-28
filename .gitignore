@@ -1,0 +1,23 @@
+node_modules/
+dist/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+.env
+.env.local
+.env.*.local
+.DS_Store
+*.log
+.turbo/
+.vercel/
+.runtime/
+.shots/
+
+# secrets / keypairs (defense-in-depth — never commit these)
+*.pem
+*.key
+*keypair*.json
+id_ed25519*
+id_rsa*
+escrow-*.json

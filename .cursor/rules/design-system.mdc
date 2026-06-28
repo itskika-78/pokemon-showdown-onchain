@@ -1,0 +1,81 @@
+---
+description: Pokemon TCG color scheme and design tokens — the target aesthetic
+globs: ["apps/web/src/**/*.css", "apps/web/src/**/*.tsx"]
+alwaysApply: false
+---
+
+# Design System — Pokemon TCG × Exebenus Color Scheme
+
+## Current Problem
+The current design uses a **WHITE background** with **RED + BLACK neo-brutal** accents.
+It needs to match the Pokemon TCG site: **DARK backgrounds** with **VIBRANT colored elements**.
+
+## Target Color Palette
+
+The `:root` vars at lines 7–77 in `apps/web/src/app/globals.css` need these overrides:
+
+```css
+/* BACKGROUND — Dark navy theme */
+--bg: #0F0F1A;
+--bg-2: #1A1A2E;
+--panel: #16213E;
+--panel-2: #1E2D4A;
+--panel-3: #243450;
+--panel-dark: #0B1120;
+--navy: #0F172A;
+--navy-2: #0B1120;
+--navy-3: #1A1A2E;
+
+/* TEXT — Light on dark */
+--text: #FFFFFF;
+--muted: #8A8FB0;
+
+/* ACCENT — Pokemon Yellow (primary CTA) */
+--accent: #FFCB05;
+--accent-ink: #0a0a0c;
+
+/* ACCENT 2 — Pokemon Blue (structural) */
+--accent-2: #3C5AA6;
+--accent-2-ink: #ffffff;
+
+/* RED — Keep for emphasis, danger, type chips */
+--red: #E3350D;
+--gold: #FFCB05;
+
+/* BORDERS — Subtle light on dark */
+--border: rgba(255,255,255,0.12);
+--border-soft: rgba(255,255,255,0.08);
+
+/* GLOWS — Critical for premium dark aesthetic */
+--glow-yellow: 0 0 26px 2px rgba(255,203,5,0.40);
+--glow-blue: 0 0 22px 2px rgba(60,90,166,0.35);
+--glow-red: 0 0 30px -2px rgba(227,53,13,0.45);
+```
+
+## Body Background
+```css
+html, body {
+  background:
+    radial-gradient(60px 60px at 12% 22%, rgba(60,90,166,0.15), transparent 70%),
+    radial-gradient(closest-side at 92% 8%, rgba(255,203,5,0.08), transparent),
+    radial-gradient(closest-side at 4% 90%, rgba(227,53,13,0.12), transparent),
+    #0F0F1A;
+  color: #FFFFFF;
+}
+```
+
+## Design Principles
+1. **Dark background** (#0F0F1A → #1A1A2E) — everything dark & premium
+2. **Pokemon Yellow (#FFCB05) CTAs** — primary buttons glow yellow, NOT red
+3. **Pokemon Blue (#3C5AA6)** — nav accents, links, structural elements
+4. **Red (#E3350D)** — ONLY for danger/emphasis/type chips
+5. **Glassmorphism panels** — semi-transparent dark panels with backdrop-filter: blur
+6. **Glow effects** — buttons, cards, borders have colored glow on hover
+7. **Nav** — dark with blur, NOT white
+8. **High contrast** — vibrant card artwork against dark neutral backgrounds
+
+## Typography
+- **Headings**: Space Grotesk (already loaded) — bold, tight tracking
+- **Body**: Inter (already loaded) — clean, readable
+- **White text** on dark backgrounds
+- **Muted light gray** (#8A8FB0) for secondary text

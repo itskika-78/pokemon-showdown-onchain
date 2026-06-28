@@ -1,0 +1,33 @@
+---
+description: Core project rules and tech stack constraints
+alwaysApply: true
+---
+
+# Pokemon Battler — UI Fix Rules
+
+## Tech Stack (DO NOT CHANGE)
+- Next.js (App Router) + TypeScript
+- Tailwind CSS + hand-written CSS in `apps/web/src/app/globals.css`
+- Framer Motion for animations
+- Space Grotesk + Inter fonts (already loaded via Google Fonts import in globals.css line 1)
+- The web frontend is at `apps/web/`
+
+## Critical Rules
+- ❌ NEVER break existing functionality (battle system, wallet connection, Solana integration)
+- ❌ NEVER change the file structure or add new frameworks/libraries
+- ❌ NEVER remove existing components — only restyle them
+- ❌ NEVER use placeholder images — the project already uses real Pokemon card images from `images.pokemontcg.io`
+- ❌ NEVER change the battle engine, API routes, or backend packages
+- ✅ ALWAYS preserve all existing class names and component props
+- ✅ ALWAYS edit CSS in `apps/web/src/app/globals.css` (the single 2020-line CSS file)
+- ✅ Only modify TSX files when the HTML structure needs changing for layout
+- ✅ Keep all existing animations (Framer Motion in components + CSS keyframes in globals.css)
+- ✅ When taking screenshots for comparison, use browser-tools MCP
+
+## File Importance
+- `globals.css` — 90% of UI changes go here (CSS vars, component styles)
+- `page.tsx` — home page structure
+- `NavBar.tsx` — navigation
+- `TrendingCardScroll.tsx` — the Exebenus-style 3D card section (already exists, enhance only)
+- `LoginHero.tsx` — login page hero
+- `AppBackground.tsx` — background layer

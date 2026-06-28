@@ -1,0 +1,120 @@
+---
+description: Pokemon TCG exact layout and component styling rules
+globs: ["apps/web/src/app/page.tsx", "apps/web/src/app/globals.css", "apps/web/src/components/*.tsx"]
+alwaysApply: false
+---
+
+# Pokemon TCG Layout — Component-by-Component Changes
+
+## Navigation (.nav, NavBar.tsx)
+**Current**: White bg `rgba(255,255,255,0.82)` with red bottom shadow
+**Target**: Dark navy bg with subtle blue glow
+
+```css
+.nav {
+  background: rgba(15,23,42,0.92);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 1px 0 rgba(60,90,166,0.25), 0 12px 40px -24px rgba(0,0,0,0.5);
+}
+.navlink { color: rgba(255,255,255,0.8); }
+.navlink:hover { background: rgba(255,255,255,0.06); color: #fff; }
+.navlink.active { background: #FFCB05; color: #0a0a0c; }
+.brand { color: #fff; }
+.brand-chain { color: #FFCB05; }
+```
+
+## Hero Section (.hero-xl, page.tsx)
+**Current**: White bg with dot pattern
+**Target**: Dark gradient with vibrant elements
+
+```css
+.hero-xl {
+  background:
+    radial-gradient(120% 120% at 88% -10%, rgba(60,90,166,0.2), transparent 55%),
+    radial-gradient(120% 120% at -8% 110%, rgba(227,53,13,0.15), transparent 55%),
+    linear-gradient(180deg, #0F172A 0%, #1A1A2E 100%);
+  border-color: rgba(255,255,255,0.08);
+}
+.display { color: #FFFFFF; }
+.lede { color: #B0B0C0; }
+.chain-tag { background: #FFCB05; color: #0a0a0c; border-color: rgba(255,255,255,0.12); }
+.btn.accent { background: #FFCB05; color: #0a0a0c; }
+.hstat b { color: #FFFFFF; }
+.hstat span { color: #8A8FB0; }
+```
+
+## Feature Cards (.feature)
+**Current**: White glassmorphism
+**Target**: Dark glassmorphism
+
+```css
+.feature {
+  background: rgba(22,34,68,0.7);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 20px 50px -32px rgba(0,0,0,0.6);
+}
+.feature:hover {
+  border-color: rgba(255,203,5,0.2);
+  box-shadow: 0 20px 50px -28px rgba(255,203,5,0.15);
+}
+.feature h3 { color: #FFFFFF; }
+.feature p { color: #8A8FB0; }
+```
+
+## Marquee (.marquee)
+**Current**: Red background
+**Target**: Keep red OR switch to Pokemon Yellow — either works with dark theme
+```css
+.marquee { background: #FFCB05; }
+.marquee-item { color: #0a0a0c; }
+```
+
+## PC Band (.pc-band)
+**Current**: Pink/white gradient
+**Target**: Dark with subtle blue gradient
+```css
+.pc-band {
+  background: radial-gradient(120% 160% at 100% 0%, #1E2D4A, #16213E 60%);
+  color: #FFFFFF;
+  border-color: rgba(255,255,255,0.08);
+}
+```
+
+## CTA Band (.cta-band)
+**Current**: White-ish with red radial
+**Target**: Dark with yellow glow
+```css
+.cta-band {
+  background: radial-gradient(120% 120% at 50% 0%, rgba(255,203,5,0.15), transparent 60%),
+    linear-gradient(180deg, #0F172A, #1A1A2E);
+  border-color: rgba(255,255,255,0.08);
+  color: #FFFFFF;
+}
+```
+
+## Buttons
+```css
+.btn { background: #FFCB05; color: #0a0a0c; border-color: rgba(255,255,255,0.12); }
+.btn.secondary { background: rgba(255,255,255,0.08); color: #fff; }
+.btn.ghost { color: #fff; }
+.btn.ghost:hover { background: rgba(255,255,255,0.06); }
+.btn.gold { background: linear-gradient(180deg, #FFCB05, #E6B800); color: #0a0a0c; }
+.btn.glow { animation-name: ctaGlowYellow; }
+/* Add new keyframe: */
+@keyframes ctaGlowYellow {
+  0%, 100% { box-shadow: var(--sh); }
+  50% { box-shadow: var(--sh), 0 0 24px 3px rgba(255,203,5,0.5); }
+}
+```
+
+## Login Page
+- `.login-card-premium` — dark bg with glow border
+- `.login-step` — dark panels
+- `.login-hero-panel` — dark, text white
+- Wallet adapter buttons already reference `--accent`, so they'll auto-update
+
+## Panels + Cards (general)
+```css
+.panel { background: rgba(22,34,68,0.6); backdrop-filter: blur(14px); border-color: rgba(255,255,255,0.08); color: #fff; }
+```

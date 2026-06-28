@@ -1,0 +1,27 @@
+{
+  "name": "@battler/battle-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@battler/battle-engine": "workspace:*",
+    "@battler/card-parser": "workspace:*",
+    "@battler/core": "workspace:*",
+    "@battler/das": "workspace:*",
+    "@battler/ingest": "workspace:*",
+    "@battler/repositories": "workspace:*",
+    "@battler/server-kit": "workspace:*",
+    "@battler/settlement": "workspace:*",
+    "@socket.io/redis-adapter": "^8.3.0",
+    "socket.io": "^4.8.3",
+    "uuid": "^14.0.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2"
+  }
+}

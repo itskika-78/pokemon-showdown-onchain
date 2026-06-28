@@ -1,0 +1,219 @@
+/* ============================================================================
+   OVERWORLD  ·  16-bit pixel-art editorial landing for the on-chain battler.
+   Warm parchment, chunky blocky display type, tilted hand-applied sprite cards
+   with hard ink borders + offset shadows, pixel badges, editorial micro-labels.
+   Namespaced under `.ow` so it never leaks into the rest of the app.
+   ========================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=Silkscreen:wght@400;700&display=swap');
+
+.ow {
+  --ow-parch:   #e9e3d1;   /* warm parchment */
+  --ow-parch-2: #efeada;
+  --ow-ink:     #1c1813;   /* warm near-black */
+  --ow-ink-2:   #3a342b;
+  --ow-mut:     #6b6253;
+  --ow-red:     #e8472b;
+  --ow-blue:    #2f6fd6;
+  --ow-green:   #3e7d3a;
+  --ow-gold:    #e6a32c;
+  --ow-card:    #f3eee0;
+  --ow-shadow:  6px 6px 0 0 var(--ow-ink);
+  --ow-shadow-lg: 10px 10px 0 0 var(--ow-ink);
+  --ow-pixel:   'Pixelify Sans', system-ui, sans-serif;
+  --ow-mono:    'Silkscreen', monospace;
+
+  position: relative; z-index: 1; color: var(--ow-ink);
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  width: 100vw; margin-left: 50%; transform: translateX(-50%);
+  padding: 0 clamp(16px, 5vw, 70px) 0; overflow: clip;
+  image-rendering: pixelated;
+}
+.ow * { box-sizing: border-box; }
+.ow img { image-rendering: pixelated; }
+
+/* ---- full-bleed parchment backdrop + big subtle burst ---- */
+.ow-bg {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.012) 0 2px, transparent 2px 4px),
+    radial-gradient(120% 100% at 50% -10%, var(--ow-parch-2), var(--ow-parch) 70%);
+}
+.ow-burst {
+  position: absolute; top: 6%; left: 50%; width: 120vmin; height: 120vmin;
+  transform: translateX(-50%); opacity: 0.06;
+  background:
+    conic-gradient(from 0deg,
+      var(--ow-ink) 0 6deg, transparent 6deg 30deg,
+      var(--ow-ink) 30deg 36deg, transparent 36deg 60deg,
+      var(--ow-ink) 60deg 66deg, transparent 66deg 90deg,
+      var(--ow-ink) 90deg 96deg, transparent 96deg 120deg,
+      var(--ow-ink) 120deg 126deg, transparent 126deg 150deg,
+      var(--ow-ink) 150deg 156deg, transparent 156deg 180deg,
+      var(--ow-ink) 180deg 186deg, transparent 186deg 210deg,
+      var(--ow-ink) 210deg 216deg, transparent 216deg 240deg,
+      var(--ow-ink) 240deg 246deg, transparent 246deg 270deg,
+      var(--ow-ink) 270deg 276deg, transparent 276deg 300deg,
+      var(--ow-ink) 300deg 306deg, transparent 306deg 330deg,
+      var(--ow-ink) 330deg 336deg, transparent 336deg 360deg);
+  -webkit-mask: radial-gradient(circle, #000 0 60%, transparent 70%);
+          mask: radial-gradient(circle, #000 0 60%, transparent 70%);
+  animation: ow-spin 120s linear infinite;
+}
+@keyframes ow-spin { to { transform: translateX(-50%) rotate(360deg); } }
+
+.ow-wrap { max-width: 1180px; margin-inline: auto; position: relative; z-index: 1; }
+
+/* ---- editorial top strip ---- */
+.ow-strip {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 2px 12px; font-family: var(--ow-mono); font-size: 10px;
+  letter-spacing: 0.1em; color: var(--ow-mut); text-transform: uppercase;
+  border-bottom: 3px solid var(--ow-ink);
+}
+.ow-strip-side { display: flex; gap: 18px; }
+.ow-strip-side span::before { content: '▸ '; color: var(--ow-red); }
+
+/* ---- hero ---- */
+.ow-hero { text-align: center; padding: clamp(40px, 7vw, 90px) 0 clamp(30px, 5vw, 60px); position: relative; }
+.ow-eyebrow {
+  display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center;
+  font-family: var(--ow-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ow-ink-2); margin-bottom: 22px;
+}
+.ow-eyebrow b { color: var(--ow-red); }
+.ow-eyebrow .sep { color: var(--ow-blue); }
+.ow-eyebrow .sq { width: 9px; height: 9px; background: var(--ow-red); display: inline-block; }
+
+.ow-title {
+  font-family: var(--ow-pixel); font-weight: 700; letter-spacing: 0.01em; line-height: 0.9;
+  font-size: clamp(54px, 13vw, 150px); color: var(--ow-ink); margin: 0;
+  text-shadow: 4px 4px 0 rgba(28,24,19,0.14);
+  display: inline-flex; align-items: center; gap: 0.1em; flex-wrap: wrap; justify-content: center;
+}
+.ow-title .dot { width: 0.42em; height: 0.42em; background: var(--ow-red); display: inline-block; margin: 0 0.12em; box-shadow: 3px 3px 0 rgba(28,24,19,0.18); }
+.ow-title .period { color: var(--ow-red); }
+
+.ow-lede { max-width: 620px; margin: 22px auto 0; color: var(--ow-ink-2); font-size: clamp(15px, 1.7vw, 18px); line-height: 1.6; }
+.ow-lede strong { color: var(--ow-ink); }
+
+.ow-cta { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; margin-top: 32px; }
+
+/* ---- chunky pixel buttons (hard offset shadow) ---- */
+.ow-btn {
+  display: inline-flex; align-items: center; gap: 9px; cursor: pointer;
+  font-family: var(--ow-pixel); font-weight: 600; font-size: 16px; letter-spacing: 0.01em;
+  padding: 13px 22px; border: 3px solid var(--ow-ink); background: var(--ow-card); color: var(--ow-ink);
+  box-shadow: var(--ow-shadow); transition: transform 0.08s steps(2), box-shadow 0.08s steps(2);
+  text-decoration: none;
+}
+.ow-btn:hover { transform: translate(2px, 2px); box-shadow: 3px 3px 0 0 var(--ow-ink); text-decoration: none; }
+.ow-btn:active { transform: translate(6px, 6px); box-shadow: 0 0 0 0 var(--ow-ink); }
+.ow-btn-blue { background: var(--ow-blue); color: #fff; }
+.ow-btn-red { background: var(--ow-red); color: #fff; }
+.ow-btn-ghost { background: var(--ow-parch-2); }
+
+/* ---- tilted hand-applied sprite cards ---- */
+.ow-cards { display: flex; justify-content: center; align-items: flex-end; gap: clamp(18px, 4vw, 56px); flex-wrap: wrap; padding: clamp(20px, 4vw, 50px) 0; }
+.ow-card { position: relative; width: clamp(180px, 22vw, 260px); }
+.ow-card-frame {
+  border: 4px solid var(--ow-ink); background: var(--ow-ink); padding: 7px;
+  box-shadow: var(--ow-shadow-lg);
+}
+.ow-card-scene {
+  position: relative; aspect-ratio: 4 / 3; overflow: hidden; display: grid; place-items: center;
+  background: linear-gradient(180deg, #8fc7e8 0 55%, #6fae4f 55% 100%);
+  image-rendering: pixelated;
+}
+.ow-card-scene img { width: 86%; height: auto; image-rendering: pixelated; filter: drop-shadow(3px 4px 0 rgba(0,0,0,0.35)); }
+.ow-card.t1 { transform: rotate(-5deg); }
+.ow-card.t2 { transform: rotate(1.5deg) translateY(-24px); z-index: 3; width: clamp(220px, 27vw, 330px); }
+.ow-card.t3 { transform: rotate(5deg); }
+.ow-card-foot {
+  margin-top: 7px; font-family: var(--ow-mono); font-size: 9px; letter-spacing: 0.08em;
+  color: #cfc7b4; display: flex; justify-content: space-between; text-transform: uppercase;
+}
+
+/* pixel badges (BIOME 01 / HOT DROP / SETTLED → typed/role tags) */
+.ow-badge {
+  position: absolute; top: -16px; z-index: 5; display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--ow-pixel); font-weight: 600; font-size: 13px; color: #fff;
+  padding: 5px 11px; border: 3px solid var(--ow-ink); box-shadow: 3px 3px 0 0 var(--ow-ink);
+  white-space: nowrap;
+}
+.ow-badge.green { background: var(--ow-green); right: -6px; }
+.ow-badge.red { background: var(--ow-red); left: 50%; transform: translateX(-50%); top: -18px; }
+.ow-badge.blue { background: var(--ow-blue); right: -6px; }
+
+/* ---- section heading (big pixel) ---- */
+.ow-sec { padding: clamp(40px, 7vw, 90px) 0; position: relative; }
+.ow-sec-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 30px; flex-wrap: wrap; }
+.ow-sec-kicker { font-family: var(--ow-mono); font-size: 10px; letter-spacing: 0.12em; color: var(--ow-red); text-transform: uppercase; }
+.ow-h2 { font-family: var(--ow-pixel); font-weight: 700; font-size: clamp(30px, 5vw, 54px); margin: 0; color: var(--ow-ink); line-height: 1; }
+.ow-rule { flex: 1; height: 3px; background: var(--ow-ink); min-width: 40px; }
+
+/* feature tiles — chunky bordered cards */
+.ow-feats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.ow-feat {
+  background: var(--ow-card); border: 3px solid var(--ow-ink); padding: 22px 20px; box-shadow: var(--ow-shadow);
+  transition: transform 0.1s steps(2), box-shadow 0.1s steps(2);
+}
+.ow-feat:hover { transform: translate(2px, 2px); box-shadow: 3px 3px 0 0 var(--ow-ink); }
+.ow-feat-ico { width: 48px; height: 48px; border: 3px solid var(--ow-ink); display: grid; place-items: center; margin-bottom: 14px; color: #fff; box-shadow: 3px 3px 0 0 var(--ow-ink); }
+.ow-feat-h { font-family: var(--ow-pixel); font-weight: 600; font-size: 19px; margin: 0 0 8px; color: var(--ow-ink); }
+.ow-feat-p { font-size: 13.5px; line-height: 1.6; color: var(--ow-ink-2); margin: 0; }
+.ow-feat-n { font-family: var(--ow-mono); font-size: 9px; color: var(--ow-mut); float: right; }
+
+/* steps strip */
+.ow-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border: 3px solid var(--ow-ink); background: var(--ow-card); box-shadow: var(--ow-shadow-lg); }
+.ow-step { padding: 22px 20px; border-right: 3px solid var(--ow-ink); }
+.ow-step:last-child { border-right: 0; }
+.ow-step-n { font-family: var(--ow-pixel); font-weight: 700; font-size: 30px; color: var(--ow-red); }
+.ow-step-h { font-family: var(--ow-pixel); font-weight: 600; font-size: 16px; margin: 4px 0 6px; }
+.ow-step-p { font-size: 13px; line-height: 1.55; color: var(--ow-ink-2); margin: 0; }
+
+/* stats ribbon */
+.ow-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.ow-stat { text-align: center; border: 3px solid var(--ow-ink); background: var(--ow-parch-2); padding: 20px 12px; box-shadow: var(--ow-shadow); }
+.ow-stat b { display: block; font-family: var(--ow-pixel); font-weight: 700; font-size: clamp(26px, 4vw, 40px); color: var(--ow-ink); }
+.ow-stat span { font-family: var(--ow-mono); font-size: 9px; letter-spacing: 0.06em; color: var(--ow-mut); text-transform: uppercase; }
+
+/* finale */
+.ow-finale {
+  margin: clamp(40px, 6vw, 80px) auto; padding: clamp(40px, 6vw, 72px) 28px; text-align: center;
+  border: 4px solid var(--ow-ink); background: var(--ow-ink); color: var(--ow-parch); box-shadow: var(--ow-shadow-lg);
+  position: relative; overflow: hidden;
+}
+.ow-finale h2 { font-family: var(--ow-pixel); font-weight: 700; font-size: clamp(30px, 5.5vw, 58px); margin: 0 0 14px; color: var(--ow-parch); }
+.ow-finale h2 .dot { color: var(--ow-red); }
+.ow-finale p { max-width: 540px; margin: 0 auto 26px; color: #d8cfba; font-size: clamp(14px, 1.6vw, 17px); line-height: 1.6; }
+
+/* footer */
+.ow-footer { border-top: 3px solid var(--ow-ink); padding: 30px 0 70px; font-family: var(--ow-mono); font-size: 10px; letter-spacing: 0.08em; color: var(--ow-mut); text-transform: uppercase; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+.ow-footer a { color: var(--ow-ink); }
+
+/* ---- home-route app chrome: parchment canvas, theme the nav ---- */
+body:has(.ow) { background: var(--ow-parch); }
+body:has(.ow) .app-main { padding-top: 0; padding-bottom: 0; }
+body:has(.ow) .poke-bg { display: none !important; }
+body:has(.ow) .announcement-stack, body:has(.ow) .app-main > .shine-banner { display: none !important; }
+body:has(.ow) .nav {
+  background: var(--ow-parch) !important; border-bottom: 3px solid var(--ow-ink) !important;
+  box-shadow: none !important; -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+body:has(.ow) .nav .brand { color: var(--ow-ink) !important; font-family: var(--ow-pixel); }
+body:has(.ow) .nav .navlink { color: var(--ow-ink-2) !important; font-family: var(--ow-mono); font-size: 11px; text-transform: uppercase; }
+body:has(.ow) .nav .navlink:hover { color: var(--ow-ink) !important; background: var(--ow-parch-2) !important; }
+body:has(.ow) .nav .navlink.active { color: #fff !important; background: var(--ow-red) !important; border-color: var(--ow-ink) !important; }
+
+@media (max-width: 900px) {
+  .ow-feats, .ow-steps, .ow-stats { grid-template-columns: repeat(2, 1fr); }
+  .ow-step:nth-child(2) { border-right: 0; }
+  .ow-card.t2 { transform: none; width: clamp(200px, 60vw, 300px); order: -1; }
+  .ow-card.t1, .ow-card.t3 { transform: none; }
+}
+@media (max-width: 560px) {
+  .ow-feats, .ow-steps, .ow-stats { grid-template-columns: 1fr; }
+  .ow-step { border-right: 0; border-bottom: 3px solid var(--ow-ink); }
+  .ow-strip-side { gap: 10px; }
+}
+@media (prefers-reduced-motion: reduce) { .ow-burst { animation: none; } }

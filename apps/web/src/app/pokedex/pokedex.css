@@ -1,0 +1,304 @@
+/* ============================================================================
+   POKÉDEX  ·  official-TCG-style card database (navy / indigo + gold)
+   Namespaced under `.pdx` (+ `.pdx-lightbox` for the portal) so it never leaks
+   into the rest of the app. Black nav on this route via :has(.pdx).
+   ============================================================================ */
+.pdx {
+  /* sharp jet-black / bright-white / sharp-red — gold & blue accents repointed
+     to red/white so the whole page reads in the brand's three colours. */
+  --pdx-navy: #0a0a0c;
+  --pdx-navy-2: #000000;
+  --pdx-indigo: #1a0608;
+  --pdx-ink: #ffffff;
+  --pdx-mut: #c4c4ce;
+  --pdx-mut-2: #80808a;
+  --pdx-line: rgba(255, 255, 255, 0.14);
+  --pdx-gold: #ff2323;     /* accent → sharp red */
+  --pdx-gold-2: #d60a0a;
+  --pdx-red: #ff2323;
+  --pdx-blue: #ff5252;     /* accent → red shade */
+  --pdx-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+  position: relative;
+  z-index: 1;
+  color: var(--pdx-ink);
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  /* break out of the legacy 1180px container so the gallery reads edge-to-edge */
+  width: 100vw;
+  margin-left: 50%;
+  transform: translateX(-50%);
+  padding: 0 clamp(16px, 4vw, 56px) 80px;
+  overflow: clip;
+  min-height: 100vh;
+}
+.pdx * { box-sizing: border-box; }
+
+/* full-bleed indigo backdrop with a diamond grid + soft glows */
+.pdx-bg {
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(120% 80% at 50% -10%, #1f0709 0%, var(--pdx-navy) 46%, #000 82%);
+}
+.pdx-bg-grid {
+  position: absolute; inset: 0; opacity: 0.5;
+  background-image:
+    linear-gradient(45deg, rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(-45deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 26px 26px;
+  -webkit-mask-image: radial-gradient(120% 90% at 50% 0%, #000 30%, transparent 78%);
+          mask-image: radial-gradient(120% 90% at 50% 0%, #000 30%, transparent 78%);
+}
+.pdx-bg-glow { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.5; mix-blend-mode: screen; }
+.pdx-bg-glow.one { width: 44vw; height: 44vw; top: -10vw; left: -8vw; background: radial-gradient(circle, rgba(255,30,30,0.5), transparent 65%); }
+.pdx-bg-glow.two { width: 36vw; height: 36vw; top: 8vw; right: -8vw; background: radial-gradient(circle, rgba(255,255,255,0.12), transparent 65%); }
+
+.pdx-hero, .pdx-controls, .pdx-results { max-width: 1240px; margin-inline: auto; }
+
+/* ============================ HERO ============================ */
+.pdx-hero { position: relative; padding-top: clamp(28px, 6vw, 64px); }
+.pdx-hero-head { text-align: center; max-width: 720px; margin: 0 auto clamp(18px, 3vw, 30px); }
+.pdx-kicker {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 12px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--pdx-mut); padding: 6px 14px; border-radius: 999px;
+  border: 1px solid var(--pdx-line); background: rgba(255,255,255,0.04); margin-bottom: 16px;
+}
+.pdx-kicker-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--pdx-gold); box-shadow: 0 0 10px 2px rgba(255,30,30,0.7); }
+.pdx-title {
+  margin: 0; font-family: 'Unbounded', 'Space Grotesk', system-ui, sans-serif; font-weight: 800;
+  letter-spacing: -0.03em; line-height: 0.95;
+  font-size: clamp(48px, 9vw, 104px); color: #fff;
+  text-shadow: 0 6px 30px rgba(0,0,0,0.6);
+}
+.pdx-title span {
+  background: linear-gradient(100deg, var(--pdx-red) 0%, #fff 45%, var(--pdx-red) 90%);
+  background-size: 220% auto; animation: pp-shine 6s linear infinite;
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.pdx-lede { margin: 16px auto 0; max-width: 560px; color: var(--pdx-mut); font-size: clamp(14.5px, 1.5vw, 17px); line-height: 1.6; }
+
+.pdx-gallery { position: relative; height: clamp(340px, 42vw, 500px); width: 100%; }
+
+/* reliable real-<img> card reel (replaces the flaky WebGL gallery) */
+.reel {
+  position: absolute; inset: 0; perspective: 1600px; overflow: hidden;
+  display: flex; align-items: center;
+  -webkit-mask: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent);
+          mask: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent);
+}
+.reel-track {
+  display: flex; gap: clamp(18px, 2.2vw, 34px); width: max-content; height: 78%;
+  align-items: center; padding: 30px 50px; transform-style: preserve-3d;
+  animation: reel-scroll 52s linear infinite;
+}
+.reel:hover .reel-track { animation-play-state: paused; }
+@keyframes reel-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.reel-card {
+  position: relative; flex: none; width: clamp(150px, 15vw, 224px);
+  transition: transform 0.45s var(--pdx-ease);
+}
+.reel-card:nth-child(odd) { transform: translateY(-16px) rotate(-2.2deg); }
+.reel-card:nth-child(even) { transform: translateY(16px) rotate(2.2deg); }
+.reel-card img {
+  width: 100%; display: block; border-radius: 13px; background: #0a0a0c;
+  box-shadow: 0 26px 52px -18px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.07);
+}
+.reel-card-glow {
+  position: absolute; inset: -12%; z-index: -1; border-radius: 26px;
+  background: radial-gradient(circle, rgba(255,30,30,0.45), transparent 64%);
+  opacity: 0; filter: blur(28px); transition: opacity 0.4s;
+}
+.reel-card:hover { transform: translateY(-24px) scale(1.08) !important; z-index: 3; }
+.reel-card:hover .reel-card-glow { opacity: 1; }
+.reel-card figcaption {
+  position: absolute; left: 0; right: 0; bottom: -26px; text-align: center;
+  font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 13px;
+  letter-spacing: 0.02em; color: #fff; opacity: 0; transition: opacity 0.3s;
+}
+.reel-card:hover figcaption { opacity: 1; }
+/* static real-card fan shown while the WebGL gallery preloads (never black/empty) */
+.pdx-gallery-load { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: clamp(8px, 1.5vw, 22px); }
+.pdx-gallery-load img {
+  width: clamp(120px, 14vw, 200px); border-radius: 12px; object-fit: contain;
+  box-shadow: 0 20px 40px -18px rgba(0,0,0,0.7); animation: pdxFlow 0.5s var(--pdx-ease) both;
+}
+.pdx-gallery-load img:nth-child(1) { transform: rotate(-9deg) translateY(14px); }
+.pdx-gallery-load img:nth-child(2) { transform: rotate(-4deg) translateY(2px); }
+.pdx-gallery-load img:nth-child(4) { transform: rotate(4deg) translateY(2px); }
+.pdx-gallery-load img:nth-child(5) { transform: rotate(9deg) translateY(14px); }
+.pdx-hero-rule {
+  display: block; height: 3px; margin: 6px auto 0; max-width: 1100px; border-radius: 3px;
+  background: linear-gradient(90deg, transparent, var(--pdx-gold) 30%, var(--pdx-gold-2) 70%, transparent);
+  box-shadow: 0 0 24px 1px rgba(246,201,69,0.5);
+}
+
+/* ============================ CONTROLS ============================ */
+.pdx-controls { margin-top: clamp(28px, 4vw, 48px); display: flex; flex-direction: column; gap: 18px; align-items: center; }
+.pdx-search {
+  display: flex; align-items: center; gap: 10px; width: min(620px, 100%);
+  padding: 13px 16px; border-radius: 16px; color: var(--pdx-ink);
+  background: rgba(255,255,255,0.07); border: 1px solid var(--pdx-line);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  box-shadow: 0 18px 50px -24px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.08);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.pdx-search:focus-within { border-color: rgba(246,201,69,0.6); box-shadow: 0 18px 50px -22px rgba(0,0,0,0.8), 0 0 0 3px rgba(246,201,69,0.16); }
+.pdx-search svg { color: var(--pdx-mut); flex: none; }
+.pdx-search input { flex: 1; min-width: 0; background: none; border: 0; outline: 0; color: #fff; font-size: 15px; font-weight: 500; }
+.pdx-search input::placeholder { color: var(--pdx-mut-2); }
+.pdx-search-clear { display: grid; place-items: center; width: 24px; height: 24px; border: 0; border-radius: 50%; cursor: pointer; color: var(--pdx-mut); background: rgba(255,255,255,0.08); }
+.pdx-search-clear:hover { color: #fff; background: rgba(255,255,255,0.16); }
+
+.pdx-filters { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.pdx-pill {
+  font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 0.01em;
+  padding: 9px 18px; border-radius: 999px; cursor: pointer; color: #cdd4f5;
+  background: rgba(255,255,255,0.06); border: 1px solid var(--pdx-line);
+  transition: all 0.2s var(--pdx-ease);
+}
+.pdx-pill:hover { color: #fff; border-color: rgba(255,255,255,0.34); transform: translateY(-1px); }
+.pdx-pill.on { color: #0a0a0c; background: #fff; border-color: #fff; box-shadow: 0 10px 24px -10px rgba(255,255,255,0.5); }
+
+/* ============================ GRID ============================ */
+.pdx-results { margin-top: clamp(22px, 3vw, 36px); }
+.pdx-count { text-align: center; color: var(--pdx-mut); font-size: 13px; font-weight: 600; margin: 0 0 18px; }
+.pdx-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: clamp(14px, 2vw, 24px);
+}
+
+.pdx-card {
+  appearance: none; border: 0; background: none; padding: 0; cursor: pointer; text-align: left;
+  display: flex; flex-direction: column; gap: 9px; color: inherit; font-family: inherit;
+  animation: pdxFlow 0.55s var(--pdx-ease) both;
+}
+@keyframes pdxFlow {
+  from { opacity: 0; transform: translateY(26px) rotate(-1.5deg) scale(0.96); }
+  to   { opacity: 1; transform: none; }
+}
+.pdx-card-inner {
+  position: relative; display: block; aspect-ratio: 245 / 342; border-radius: 12px; overflow: hidden;
+  background: linear-gradient(160deg, #20254f, #11132f);
+  box-shadow: 0 14px 30px -14px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06);
+  transition: transform 0.28s var(--pdx-ease), box-shadow 0.28s var(--pdx-ease);
+}
+.pdx-card-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* continuous holo shimmer + a brighter sweep on hover */
+.pdx-card-shine {
+  position: absolute; inset: 0; pointer-events: none; border-radius: inherit; mix-blend-mode: screen;
+  background: linear-gradient(115deg, transparent 38%, rgba(255,255,255,0.5) 48%, rgba(180,210,255,0.4) 53%, transparent 64%);
+  background-size: 250% 250%; background-position: 150% 0;
+  opacity: 0.5; transition: opacity 0.3s;
+}
+.pdx-card:hover .pdx-card-inner { transform: translateY(-6px) scale(1.03); box-shadow: 0 28px 54px -18px rgba(0,0,0,0.85), 0 0 0 1px rgba(246,201,69,0.5), 0 0 40px -10px rgba(246,201,69,0.45); }
+.pdx-card:hover .pdx-card-shine { animation: pdxSheen 0.9s var(--pdx-ease); opacity: 1; }
+@keyframes pdxSheen { from { background-position: 150% 0; } to { background-position: -120% 0; } }
+.pdx-card-zoom {
+  position: absolute; top: 8px; right: 8px; display: grid; place-items: center;
+  width: 30px; height: 30px; border-radius: 50%; color: #fff;
+  background: rgba(8,10,30,0.6); border: 1px solid rgba(255,255,255,0.22);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  opacity: 0; transform: scale(0.7); transition: all 0.25s var(--pdx-ease);
+}
+.pdx-card:hover .pdx-card-zoom { opacity: 1; transform: scale(1); }
+.pdx-card-meta { display: flex; flex-direction: column; gap: 1px; padding: 0 2px; }
+.pdx-card-name { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pdx-card-sub { font-size: 11px; color: var(--pdx-mut-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* skeleton shimmer while the first page loads */
+.pdx-card.skeleton {
+  aspect-ratio: 245 / 342; border-radius: 12px; cursor: default;
+  background: linear-gradient(100deg, rgba(255,255,255,0.05) 30%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.05) 70%);
+  background-size: 220% 100%; animation: pdxSkel 1.2s linear infinite;
+}
+@keyframes pdxSkel { from { background-position: 180% 0; } to { background-position: -80% 0; } }
+
+.pdx-empty { text-align: center; padding: 60px 0; color: var(--pdx-mut); }
+.pdx-empty-ball {
+  display: inline-block; width: 46px; height: 46px; border-radius: 50%; margin-bottom: 14px;
+  background: radial-gradient(circle at 50% 50%, #fff 0 28%, #0a0a0c 28% 36%, #e3120b 36% 50%, #b50d08 50%);
+  border: 3px solid #0c0e2a; box-shadow: 0 0 30px -4px rgba(227,18,11,0.6);
+}
+
+.pdx-more { display: flex; justify-content: center; margin-top: 36px; }
+
+/* ============================ buttons ============================ */
+.pdx-btn {
+  display: inline-flex; align-items: center; gap: 8px; cursor: pointer; border: 0;
+  font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14px;
+  padding: 13px 26px; border-radius: 999px; transition: transform 0.2s var(--pdx-ease), box-shadow 0.2s, filter 0.2s;
+}
+.pdx-btn-load { color: #0a0a0c; background: linear-gradient(180deg, #ffe27a, var(--pdx-gold)); box-shadow: 0 14px 30px -12px rgba(246,201,69,0.6); }
+.pdx-btn-load:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.05); }
+.pdx-btn-load:disabled { opacity: 0.6; cursor: progress; }
+.pdx-btn-accent { color: #fff; background: linear-gradient(180deg, #ff5a52, var(--pdx-red)); box-shadow: 0 14px 30px -12px rgba(227,18,11,0.65); text-decoration: none; }
+.pdx-btn-accent:hover { transform: translateY(-2px); filter: brightness(1.05); }
+
+/* ============================ LIGHTBOX ============================ */
+.pdx-lightbox { position: fixed; inset: 0; z-index: 300; display: grid; place-items: center; padding: 24px;
+  --pdx-ink: #f4f6ff; --pdx-mut: #aab2dd; --pdx-gold: #f6c945; --pdx-red: #e3120b; --pdx-line: rgba(255,255,255,0.12); }
+.pdx-lightbox-backdrop { position: absolute; inset: 0; background: rgba(5,6,18,0.78); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); animation: pdxFade 0.3s ease; }
+@keyframes pdxFade { from { opacity: 0; } to { opacity: 1; } }
+.pdx-lightbox-panel {
+  position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 340px);
+  gap: clamp(20px, 4vw, 44px); align-items: center; width: min(760px, 100%); padding: clamp(20px, 3vw, 36px);
+  border-radius: 24px; background: linear-gradient(165deg, rgba(28,32,72,0.96), rgba(10,12,32,0.98));
+  border: 1px solid var(--pdx-line); box-shadow: 0 50px 120px -30px #000, 0 0 80px -30px rgba(246,201,69,0.4);
+  animation: pdxPop 0.4s var(--pdx-ease) both;
+}
+@keyframes pdxPop { from { opacity: 0; transform: translateY(20px) scale(0.96); } to { opacity: 1; transform: none; } }
+.pdx-lightbox-close { position: absolute; top: 12px; right: 12px; z-index: 4; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; color: #fff; background: rgba(255,255,255,0.08); border: 1px solid var(--pdx-line); transition: all 0.2s; }
+.pdx-lightbox-close:hover { background: var(--pdx-red); border-color: transparent; transform: rotate(90deg); }
+.pdx-lightbox-card { position: relative; border-radius: 14px; overflow: hidden; box-shadow: 0 30px 70px -22px #000; }
+.pdx-lightbox-card img { width: 100%; height: auto; display: block; }
+.pdx-lightbox-meta h3 { margin: 8px 0 0; font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: clamp(26px, 4vw, 36px); letter-spacing: -0.02em; color: #fff; }
+.pdx-eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--pdx-mut); }
+.pdx-lightbox-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 22px; }
+.pdx-tag { font-size: 12px; font-weight: 700; color: #0a0a0c; background: linear-gradient(180deg, #ffe27a, var(--pdx-gold)); padding: 4px 11px; border-radius: 999px; }
+.pdx-tag.ghost { color: var(--pdx-mut); background: none; border: 1px solid var(--pdx-line); }
+
+/* ============================ PROFILECARD LIGHTBOX (card click → holographic tilt) ============================ */
+.pdx-pc-lightbox { position: fixed; inset: 0; z-index: 320; display: grid; place-items: center; padding: 28px; }
+.pdx-pc-holder { position: relative; z-index: 1; width: min(380px, 86vw); animation: pdxPop 0.45s var(--pdx-ease) both; }
+.pdx-pc-close {
+  position: fixed; top: 20px; right: 22px; z-index: 4; display: grid; place-items: center;
+  width: 42px; height: 42px; border-radius: 50%; cursor: pointer; color: #fff;
+  background: rgba(255,255,255,0.1); border: 1px solid var(--pdx-line);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); transition: all 0.2s;
+}
+.pdx-pc-close:hover { background: var(--pdx-red); border-color: transparent; transform: rotate(90deg); }
+/* Show the REAL card in full colour (override ProfileCard's luminosity avatar blend),
+   and let the holo shine/glare ride over the actual scan. */
+.pdx-pc .pc-avatar-content { mix-blend-mode: normal; }
+.pdx-pc .pc-avatar-content .avatar { object-fit: contain; }
+.pdx-pc .pc-card { background: #0a0e20; }
+
+/* ============================ NAV (black, official-TCG style on this route) ============================ */
+body:has(.pdx) { background: #000000; }
+body:has(.pdx) .app-main { padding-top: 0; padding-bottom: 0; }
+body:has(.pdx) .poke-bg { display: none !important; }
+body:has(.pdx) .announcement-stack,
+body:has(.pdx) .app-main > .shine-banner { display: none !important; }
+body:has(.pdx) .nav {
+  background: rgba(8, 9, 24, 0.86) !important;
+  border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+  box-shadow: 0 1px 0 rgba(246,201,69,0.3) !important;
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+}
+body:has(.pdx) .nav .brand { color: #fff !important; }
+body:has(.pdx) .nav .navlink { color: rgba(255,255,255,0.8) !important; }
+body:has(.pdx) .nav .navlink:hover { color: #fff !important; background: rgba(255,255,255,0.08) !important; border-color: transparent !important; }
+body:has(.pdx) .nav .navlink.active { color: #0a0a0c !important; background: linear-gradient(180deg, #ffe27a, var(--pdx-gold, #f6c945)) !important; }
+
+/* ============================ RESPONSIVE ============================ */
+@media (max-width: 720px) {
+  .pdx-gallery { height: 340px; }
+  .pdx-grid { grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); }
+  .pdx-lightbox-panel { grid-template-columns: 1fr; max-width: 340px; }
+  .pdx-lightbox-card { max-width: 220px; margin: 0 auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pdx-card { animation: none; }
+  .pdx-card-shine, .pdx-card.skeleton { animation: none; }
+}

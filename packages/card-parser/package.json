@@ -1,0 +1,19 @@
+{
+  "name": "@battler/card-parser",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc -b"
+  },
+  "dependencies": {
+    "@battler/core": "workspace:*",
+    "@pkmn/dex": "0.10.10",
+    "fuse.js": "^7.4.2"
+  }
+}

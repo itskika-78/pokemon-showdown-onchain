@@ -1,0 +1,72 @@
+---
+description: 3D floating card effect — Exebenus style enhancements
+globs: ["apps/web/src/components/TrendingCardScroll.tsx", "apps/web/src/app/globals.css", "apps/web/src/app/page.tsx"]
+alwaysApply: false
+---
+
+# 3D Card Effect — Exebenus Style
+
+## What Already Works (DO NOT BREAK)
+The `TrendingCardScroll.tsx` component already implements:
+- ✅ Scroll-pinned sticky section with dark `.tcard-bg` background
+- ✅ Real Charizard Base Set card image from `images.pokemontcg.io/base1/4_hires.png`
+- ✅ Framer Motion scroll-driven rotation (rotateY, rotateX, scale via `useScroll`)
+- ✅ Two perspective ground lines (`.tcard-line .l1` and `.l2`)
+- ✅ Conic-gradient rotating rings (`.tcard-rings`)
+- ✅ Floating spark particles (`.tcard-spark`)
+- ✅ Stats panel that fades in on scroll with animated stat bars
+- ✅ Card reflection below the card
+- ✅ Reduced motion fallback
+
+## Enhancements Needed (CSS ONLY in globals.css)
+
+### 1. Stage Lines — Add Teal Glow
+`.tcard-line` needs Exebenus-style teal (#2CA6A4) glow:
+```css
+.tcard-line {
+  /* existing styles + add: */
+  box-shadow: 0 0 12px rgba(44,166,164,0.5), 0 0 28px rgba(44,166,164,0.25);
+  filter: blur(0.3px);
+}
+```
+
+### 2. Card Container — Teal Outer Glow
+`.tcard-3d` box-shadow needs teal glow mixed in:
+```css
+.tcard-3d {
+  box-shadow:
+    0 40px 90px -30px rgba(0,0,0,0.8),
+    0 0 0 1px rgba(255,255,255,0.05) inset,
+    0 0 50px -6px rgba(44,166,164,0.45),  /* teal glow */
+    0 0 80px -10px rgba(58,111,245,0.35);  /* blue glow */
+}
+```
+
+### 3. Rings — Incorporate Teal
+`.tcard-rings` conic-gradient should include teal:
+```css
+background: conic-gradient(from 0deg,
+  rgba(44,166,164,0),
+  rgba(44,166,164,0.55),
+  rgba(58,111,245,0.55),
+  rgba(238,21,21,0.55),
+  rgba(255,203,5,0.55),
+  rgba(44,166,164,0)
+);
+```
+
+### 4. Background Contrast
+`.tcard-bg` — ensure very deep dark for maximum card pop:
+```css
+background: linear-gradient(180deg, #050810 0%, #0a1225 58%, #040608 100%);
+```
+
+### 5. Hero Card (page.tsx hero section)
+The `.hero-card` in the main hero should:
+- Use dark background instead of white
+- Have colored glow shadow
+- Consider replacing the sprite-based card with a real card image
+- Add mouse-reactive tilt via JavaScript
+
+## DO NOT change the Framer Motion logic in TrendingCardScroll.tsx
+Only enhance through CSS in globals.css.

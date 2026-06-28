@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "include": ["src/**/*.ts"],
+  "references": [
+    { "path": "../core" },
+    { "path": "../card-parser" },
+    { "path": "../battle-engine" },
+    { "path": "../das" },
+    { "path": "../repositories" },
+    { "path": "../server-kit" }
+  ]
+}

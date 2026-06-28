@@ -1,0 +1,14 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/core" },
+    { "path": "./packages/card-parser" },
+    { "path": "./packages/das" },
+    { "path": "./packages/battle-engine" },
+    { "path": "./packages/server-kit" },
+    { "path": "./packages/repositories" },
+    { "path": "./packages/ingest" },
+    { "path": "./packages/settlement" },
+    { "path": "./apps/battle-service" }
+  ]
+}

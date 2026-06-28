@@ -1,0 +1,44 @@
+{
+  "name": "pokemon-cnft-battler",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "packageManager": "pnpm@11.1.3",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -b --pretty && tsc -p apps/web --noEmit",
+    "demo:battle": "tsx packages/battle-engine/demo/bot-vs-bot.ts",
+    "demo:pipeline": "tsx scripts/demo-pipeline.ts",
+    "loadtest": "tsx scripts/loadtest.ts",
+    "dev:server": "pnpm --filter @battler/battle-service start",
+    "dev:web": "pnpm --filter @battler/web dev",
+    "dev:postgres": "node scripts/dev-postgres.mjs",
+    "dev:redis": "node scripts/dev-redis.mjs"
+  },
+  "devDependencies": {
+    "@battler/battle-engine": "workspace:*",
+    "@battler/card-parser": "workspace:*",
+    "@battler/core": "workspace:*",
+    "@battler/das": "workspace:*",
+    "@battler/ingest": "workspace:*",
+    "@battler/repositories": "workspace:*",
+    "@battler/server-kit": "workspace:*",
+    "@battler/settlement": "workspace:*",
+    "@solana/web3.js": "^1.98.4",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^22.10.2",
+    "@types/pg": "^8.20.0",
+    "bs58": "^6.0.0",
+    "embedded-postgres": "16.14.0-beta.17",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.21.0",
+    "socket.io-client": "^4.8.3",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
