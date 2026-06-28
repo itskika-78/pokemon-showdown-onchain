@@ -64,35 +64,40 @@ async function resolveClient(): Promise<KvClient> {
   const cfg = loadServerConfig();
   const forceRedis = process.env.FORCE_REDIS === '1';
 
-  if (!cfg.isProd && !forceRedis) {
-    // Probe with a fragile, fail-fast connection (offline queue OFF, 1 retry) so
-    // we fall back to the in-memory KV quickly when Redis is down in dev...
-    const probe = attachErrorHandler(new Redis(cfg.redisUrl, {
-      maxRetriesPerRequest: 1,
-      connectTimeout: 1500,
-      lazyConnect: true,
-      enableOfflineQueue: false,
-    }), 'probe');
-    try {
-      await probe.connect();
-      await probe.ping();
-      await probe.quit().catch(() => undefined);
-      // ...but for the long-lived client use a DURABLE connection (default
-      // offline queue + auto-reconnect) — otherwise a single Redis blip leaves
-      // a permanently un-writeable stream ("Stream isn't writeable").
-      client = durableClient(cfg.redisUrl) as unknown as KvClient;
-      clientMode = 'redis';
-    } catch {
-      await probe.quit().catch(() => undefined);
-      client = new MemoryKv();
-      clientMode = 'memory';
-      console.warn('[server-kit] Redis unavailable — using in-memory KV for dev. Run: pnpm dev:redis');
-    }
+  // FORCE_REDIS (the battle-service, which truly requires shared Redis) → use the
+  // durable client directly. Everything else (incl. the Vercel web app) PROBES
+  // first and falls back to in-memory KV when Redis is unreachable — otherwise an
+  // unset/unreachable REDIS_URL leaves the durable client's offline queue waiting
+  // forever and every request (e.g. the rate-limited /api/rpc) hangs until timeout.
+  if (forceRedis) {
+    client = durableClient(cfg.redisUrl) as unknown as KvClient;
+    clientMode = 'redis';
     return client;
   }
 
-  client = durableClient(cfg.redisUrl) as unknown as KvClient;
-  clientMode = 'redis';
+  // Probe with a fragile, fail-fast connection (offline queue OFF, 1 retry) so we
+  // fall back to the in-memory KV quickly when Redis is down or not configured.
+  const probe = attachErrorHandler(new Redis(cfg.redisUrl, {
+    maxRetriesPerRequest: 1,
+    connectTimeout: 1500,
+    lazyConnect: true,
+    enableOfflineQueue: false,
+  }), 'probe');
+  try {
+    await probe.connect();
+    await probe.ping();
+    await probe.quit().catch(() => undefined);
+    // ...but for the long-lived client use a DURABLE connection (default offline
+    // queue + auto-reconnect) — otherwise a single Redis blip leaves a permanently
+    // un-writeable stream ("Stream isn't writeable").
+    client = durableClient(cfg.redisUrl) as unknown as KvClient;
+    clientMode = 'redis';
+  } catch {
+    await probe.quit().catch(() => undefined);
+    client = new MemoryKv();
+    clientMode = 'memory';
+    console.warn('[server-kit] Redis unavailable — using in-memory KV. Set REDIS_URL to a reachable Redis (e.g. Upstash) for shared state across instances.');
+  }
   return client;
 }
 
