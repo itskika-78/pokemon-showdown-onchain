@@ -21,16 +21,27 @@ export async function verifySolTransfer(
   connection: Connection,
   opts: { signature: string; from: string; to: string; minLamports: number },
 ): Promise<VerifyTransferResult> {
-  let tx;
-  try {
-    tx = await connection.getTransaction(opts.signature, {
-      commitment: 'confirmed',
-      maxSupportedTransactionVersion: 0,
-    });
-  } catch (e) {
-    return { ok: false, lamports: 0, reason: e instanceof Error ? e.message : 'RPC error' };
+  // Devnet routinely takes longer than the wallet's 30s window to surface a
+  // transaction at the 'confirmed' commitment. Poll for it (~20s) instead of
+  // giving up after a single lookup, so a real (already-paid) purchase still
+  // gets credited rather than reported as "payment not found".
+  let tx: Awaited<ReturnType<Connection['getTransaction']>> = null;
+  let lastReason: string | undefined;
+  for (let attempt = 0; attempt < 6; attempt++) {
+    try {
+      tx = await connection.getTransaction(opts.signature, {
+        commitment: 'confirmed',
+        maxSupportedTransactionVersion: 0,
+      });
+    } catch (e) {
+      lastReason = e instanceof Error ? e.message : 'RPC error';
+    }
+    if (tx) break;
+    await new Promise((r) => setTimeout(r, 2000));
   }
-  if (!tx) return { ok: false, lamports: 0, reason: 'Transaction not found or not confirmed' };
+  if (!tx) {
+    return { ok: false, lamports: 0, reason: lastReason ?? 'Transaction not yet confirmed — try again in a moment' };
+  }
   if (tx.meta?.err) return { ok: false, lamports: 0, reason: 'Transaction failed on-chain' };
 
   const keys = tx.transaction.message.getAccountKeys();

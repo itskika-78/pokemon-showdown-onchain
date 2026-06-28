@@ -3,13 +3,54 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { Transaction, VersionedTransaction } from '@solana/web3.js';
+import { Transaction, VersionedTransaction, type Connection } from '@solana/web3.js';
 import { useSession, useNetwork } from '@/components/Providers';
 import { apiClient, type CollectionStats, type RosterCard } from '@/lib/api';
 import { clientCache } from '@/lib/clientCache';
 import { Sparkline } from '@/components/Sparkline';
 import { PageShell, PageHero, EmptyState, Button, Pill } from '@/components/ui';
 import { StaggerChildren, StaggerItem, HoverLift } from '@/components/motion';
+
+/**
+ * Wait for a signature to reach confirmed/finalized by polling status ourselves.
+ * web3.js's `confirmTransaction(sig)` hard-fails after ~30s, but devnet often
+ * needs longer — and the payment is usually fine. We poll tolerantly and never
+ * throw on timeout (the server re-verifies on-chain before crediting); we only
+ * throw if the chain reports the tx itself failed.
+ */
+async function waitForConfirmation(connection: Connection, signature: string, timeoutMs = 90_000): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    try {
+      const { value } = await connection.getSignatureStatuses([signature]);
+      const s = value[0];
+      if (s?.err) throw new Error('Transaction failed on-chain.');
+      if (s && (s.confirmationStatus === 'confirmed' || s.confirmationStatus === 'finalized')) return;
+    } catch (e) {
+      if (e instanceof Error && /failed on-chain/.test(e.message)) throw e;
+      /* transient RPC hiccup — keep polling */
+    }
+    await new Promise((r) => setTimeout(r, 2500));
+  }
+  // Timed out waiting — fall through; the server is the source of truth.
+}
+
+/** Credit the purchase via the server (authoritative — it re-verifies on-chain), retrying through devnet lag. */
+async function confirmPurchaseWithRetry(listingId: string, signature: string): Promise<void> {
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    try {
+      await apiClient.devnetBuyConfirm(listingId, signature);
+      return;
+    } catch (e) {
+      lastErr = e;
+      const msg = e instanceof Error ? e.message : '';
+      if (/already processed|duplicate/i.test(msg)) return; // already credited = success
+      await new Promise((r) => setTimeout(r, 4000));
+    }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error('Could not confirm the purchase.');
+}
 
 function MarketOverview({ stats }: { stats: CollectionStats | null }) {
   if (!stats) {
@@ -96,15 +137,25 @@ export default function MarketPage() {
       const raw = Uint8Array.from(atob(txBase64), (c) => c.charCodeAt(0));
       const tx = versioned ? VersionedTransaction.deserialize(raw) : Transaction.from(raw);
       const sig = await sendTransaction(tx, connection);
-      await connection.confirmTransaction(sig, 'confirmed');
-      await apiClient.devnetBuyConfirm(card.listingId, sig);
+      setToast({ kind: 'good', text: `Payment sent — confirming on devnet (this can take a moment)…` });
+      // Devnet confirmation can exceed the wallet's 30s window; poll tolerantly
+      // and let the server re-verify on-chain so a paid purchase always credits.
+      await waitForConfirmation(connection, sig);
+      await confirmPurchaseWithRetry(card.listingId, sig);
       window.dispatchEvent(new Event('balance-refresh'));
       window.dispatchEvent(new Event('das-settings-changed'));
       setToast({ kind: 'good', text: `Bought ${card.name}! Stock updated — card added to your collection.` });
       load();
     } catch (e) {
       const m = e instanceof Error ? e.message : 'Purchase failed';
-      setToast({ kind: 'bad', text: /user rejected|rejected the request/i.test(m) ? 'You declined the transaction.' : m });
+      setToast({
+        kind: 'bad',
+        text: /user rejected|rejected the request/i.test(m)
+          ? 'You declined the transaction.'
+          : /failed on-chain/i.test(m)
+            ? 'The transaction failed on-chain — no charge was applied.'
+            : `${m} If devnet SOL left your wallet, your card will appear once it confirms — reload in a minute.`,
+      });
     } finally {
       setBuyingId(null);
     }
