@@ -7,6 +7,15 @@
   "engines": {
     "node": ">=20"
   },
+  "pnpm": {
+    "ignoredBuiltDependencies": [
+      "@embedded-postgres/linux-x64",
+      "@embedded-postgres/darwin-x64",
+      "@embedded-postgres/darwin-arm64",
+      "@embedded-postgres/windows-x64",
+      "embedded-postgres"
+    ]
+  },
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
