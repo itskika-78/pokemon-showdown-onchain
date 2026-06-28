@@ -7,15 +7,6 @@
   "engines": {
     "node": ">=20"
   },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "@embedded-postgres/linux-x64",
-      "@embedded-postgres/darwin-x64",
-      "@embedded-postgres/darwin-arm64",
-      "@embedded-postgres/windows-x64"
-    ]
-  },
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
