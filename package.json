@@ -8,12 +8,12 @@
     "node": ">=20"
   },
   "pnpm": {
-    "ignoredBuiltDependencies": [
+    "onlyBuiltDependencies": [
+      "esbuild",
       "@embedded-postgres/linux-x64",
       "@embedded-postgres/darwin-x64",
       "@embedded-postgres/darwin-arm64",
-      "@embedded-postgres/windows-x64",
-      "embedded-postgres"
+      "@embedded-postgres/windows-x64"
     ]
   },
   "scripts": {
