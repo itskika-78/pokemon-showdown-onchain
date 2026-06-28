@@ -50,13 +50,33 @@ h1, h2, h3, h4, .brand, .btn, .navlink, .badge, .pill, button, .segmented button
 a { color: var(--red); }
 a:hover { text-decoration: underline; }
 
-/* ---- nav ---- */
-.nav {
-  background: var(--bg) !important;
-  border-bottom: 3px solid var(--ink) !important;
-  box-shadow: 0 3px 0 0 rgba(28,24,19,0.10) !important;
-  -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+/* ---- nav: liquid-glass + refractive --------------------------------------
+   Activates the `#nav-liquid-glass` SVG filter defined in NavBar.tsx (feTurbulence
+   + feDisplacementMap) that an earlier opaque override was suppressing. The
+   `url(#…)` backdrop refracts the page content scrolling behind the bar (Chromium);
+   blur + saturate give a frosted-glass fallback elsewhere. Applied to the `.ow`
+   (home) and `.pdx` (pokedex) routes too so the glass is consistent everywhere. */
+.nav,
+body:has(.ow) .nav,
+body:has(.pdx) .nav {
+  background: linear-gradient(180deg, rgba(247,242,228,0.50), rgba(233,227,209,0.36)) !important;
+  border-bottom: 1.5px solid rgba(28,24,19,0.22) !important;
+  box-shadow: 0 10px 34px -14px rgba(28,24,19,0.42), inset 0 1px 0 rgba(255,255,255,0.6) !important;
+  -webkit-backdrop-filter: url(#nav-liquid-glass) blur(13px) saturate(1.7) brightness(1.04) !important;
+          backdrop-filter: url(#nav-liquid-glass) blur(13px) saturate(1.7) brightness(1.04) !important;
+  overflow: hidden;
 }
+/* keep nav contents above the moving specular sheen */
+.nav > * { position: relative; z-index: 1; }
+/* slow specular highlight sweeping across the glass for the "liquid" feel */
+.nav::after {
+  content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: linear-gradient(105deg, transparent 34%, rgba(255,255,255,0.32) 48%, transparent 60%);
+  background-size: 220% 100%; background-position: 150% 0; mix-blend-mode: screen;
+  animation: nav-sheen 9s ease-in-out infinite;
+}
+@keyframes nav-sheen { 0%,100% { background-position: 150% 0; } 50% { background-position: -50% 0; } }
+@media (prefers-reduced-motion: reduce) { .nav::after { animation: none; } }
 .nav .brand { color: var(--ink) !important; }
 .brand-chain {
   color: var(--red) !important; background: none !important;
