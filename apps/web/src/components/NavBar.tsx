@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useSession, useNetwork } from '@/components/Providers';
+import { useSession } from '@/components/Providers';
 import { prefetchRouteData } from '@/lib/clientCache';
 import { Pokeball } from '@/components/Pokeball';
 import { WalletBalance } from '@/components/WalletBalance';
@@ -57,8 +57,6 @@ function NavLink({
 
 export function NavBar() {
   const { signedIn, signOut } = useSession();
-  const network = useNetwork();
-  const mode = network?.mode ?? null;
   const pathname = usePathname();
   const reduced = useReducedMotion();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -134,12 +132,6 @@ export function NavBar() {
 
         <span className="spacer" />
         <WalletBalance />
-        {mode && (
-          <span className={`pill ${mode}`} title="Active data source (Settings)">
-            <span className="dot" />
-            {mode}
-          </span>
-        )}
         {signedIn ? (
           <button className="btn secondary" onClick={signOut}>
             Sign out
@@ -201,12 +193,6 @@ export function NavBar() {
               ))}
               <div className="nav-drawer-meta">
                 <WalletBalance />
-                {mode && (
-                  <span className={`pill ${mode}`}>
-                    <span className="dot" />
-                    {mode}
-                  </span>
-                )}
                 {signedIn ? (
                   <button className="btn secondary block" onClick={signOut}>
                     Sign out

@@ -1,0 +1,39 @@
+# Render Blueprint — long-lived battle-service (Socket.IO + matchmaking).
+# Vercel cannot host WebSockets; deploy this service, then set BATTLE_WS_PUBLIC_URL
+# on Vercel to the Render service URL (e.g. https://pokemon-battle.onrender.com).
+#
+# After deploy: Vercel → Settings → Environment Variables:
+#   BATTLE_WS_PUBLIC_URL = https://<this-service>.onrender.com
+
+services:
+  - type: web
+    name: pokemon-battle-service
+    runtime: node
+    region: oregon
+    plan: free
+    buildCommand: corepack enable && corepack prepare pnpm@11.1.3 --activate && pnpm install
+    startCommand: pnpm --filter @battler/battle-service start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: FORCE_REDIS
+        value: "0"
+      - key: WEB_ORIGIN
+        value: https://pokemon-showdown-onchain.vercel.app
+      - key: DAS_MODE
+        value: devnet
+      - key: PHYGITALS_COLLECTION_MINTS
+        value: BSG6DyEihFFtfvxtL9mKYsvTwiZXB1rq5gARMTJC2xAM
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: LOG_SIGNING_SECRET
+        sync: false
+      - key: HELIUS_API_KEY
+        sync: false
+      - key: TREASURY_WALLET
+        sync: false

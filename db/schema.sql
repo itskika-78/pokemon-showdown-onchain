@@ -233,6 +233,15 @@ CREATE TABLE IF NOT EXISTS friends (
 CREATE INDEX IF NOT EXISTS idx_friends_owner ON friends(owner_pubkey);
 
 -- ---------------------------------------------------------------------------
+-- Platform-wide KV (network mode, etc.) — durable across serverless instances.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS platform_kv (
+  key         TEXT PRIMARY KEY,
+  value       JSONB NOT NULL,
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ---------------------------------------------------------------------------
 -- Seed the platform treasury "user" that receives the rake.
 -- ---------------------------------------------------------------------------
 INSERT INTO users (pubkey, ledger_balance) VALUES ('PLATFORM_TREASURY', 0)

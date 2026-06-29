@@ -80,7 +80,8 @@ export async function getEffectiveDasSettings(): Promise<EffectiveDasSettings> {
 
   const cfg = loadServerConfig();
   const redisMode = await getDasSettings();
-  const mode: DasNetwork = redisMode ?? (cfg.isProd ? 'mainnet' : 'devnet');
+  /** Redis override from Settings; falls back to DAS_MODE env default. */
+  const mode: DasNetwork = redisMode ?? cfg.dasMode;
   const heliusRpcUrl = cfg.heliusRpcUrl;
   const heliusDevnetRpcUrl = cfg.heliusDevnetRpcUrl;
   const activeRpcUrl = mode === 'mainnet' ? heliusRpcUrl : heliusDevnetRpcUrl;

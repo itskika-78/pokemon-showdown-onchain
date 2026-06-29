@@ -14,12 +14,20 @@ import {
 import { useSession } from '@/components/Providers';
 import { apiClient, type AssetsResponse, type DasSettingsResponse } from '@/lib/api';
 import { clientCache, dedupeFetch } from '@/lib/clientCache';
+import { DAS_SETTINGS_CHANGED, readNetworkChangeDetail } from '@/lib/networkEvents';
+
+const EMPTY_ASSETS: AssetsResponse = { cards: [], profiles: {}, unsupported: [] };
+
+function hasWalletAssets(d: AssetsResponse | null | undefined): boolean {
+  return !!d && (d.cards.length > 0 || d.unsupported.length > 0);
+}
 
 interface AppDataCtx {
   assets: AssetsResponse | null;
   teamIds: string[];
   settings: DasSettingsResponse | null;
   syncing: boolean;
+  assetsError: string | null;
   refreshAssets: (chainSync?: boolean) => Promise<void>;
   refreshTeam: () => Promise<void>;
   refreshSettings: () => Promise<void>;
@@ -31,6 +39,7 @@ const Ctx = createContext<AppDataCtx>({
   teamIds: [],
   settings: null,
   syncing: false,
+  assetsError: null,
   refreshAssets: async () => {},
   refreshTeam: async () => {},
   refreshSettings: async () => {},
@@ -41,22 +50,34 @@ export const useAppData = () => useContext(Ctx);
 
 export function AppDataProvider({ children }: { children: ReactNode }) {
   const { signedIn } = useSession();
-  const [assets, setAssets] = useState<AssetsResponse | null>(() => clientCache.getAssets());
+  const [assets, setAssets] = useState<AssetsResponse | null>(() => {
+    const cached = clientCache.getAssets();
+    return hasWalletAssets(cached) ? cached : null;
+  });
   const [teamIds, setTeamIds] = useState<string[]>(() => clientCache.getTeam()?.assetIds ?? []);
   const [settings, setSettings] = useState<DasSettingsResponse | null>(() => clientCache.getSettings());
   const [syncing, setSyncing] = useState(false);
+  const [assetsError, setAssetsError] = useState<string | null>(null);
 
   const refreshAssets = useCallback(async (chainSync = false) => {
-    const showSpinner = chainSync || !clientCache.getAssets();
+    const cached = clientCache.getAssets();
+    const showSpinner = chainSync || !hasWalletAssets(cached);
     if (showSpinner) setSyncing(true);
     try {
       const d = await dedupeFetch(chainSync ? 'assets-sync' : 'assets', () =>
         apiClient.assets(chainSync),
       );
       setAssets(d);
+      setAssetsError(null);
       clientCache.setAssets(d);
-    } catch {
-      /* keep stale cache on error */
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Failed to load collection';
+      setAssetsError(msg);
+      if (hasWalletAssets(cached)) {
+        setAssets(cached);
+      } else {
+        setAssets(EMPTY_ASSETS);
+      }
     } finally {
       if (showSpinner) setSyncing(false);
     }
@@ -87,13 +108,14 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       setAssets(null);
       setTeamIds([]);
       setSettings(null);
+      setAssetsError(null);
       return;
     }
 
     const cachedAssets = clientCache.getAssets();
     const cachedTeam = clientCache.getTeam();
     const cachedSettings = clientCache.getSettings();
-    if (cachedAssets) setAssets(cachedAssets);
+    if (hasWalletAssets(cachedAssets)) setAssets(cachedAssets);
     if (cachedTeam) setTeamIds(cachedTeam.assetIds);
     if (cachedSettings) setSettings(cachedSettings);
 
@@ -107,16 +129,43 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   }, [signedIn, refreshAssets, refreshTeam, refreshSettings]);
 
   useEffect(() => {
-    const onRefresh = () => {
+    const onRefresh = (ev: Event) => {
+      const detail = readNetworkChangeDetail(ev);
+      if (detail) {
+        setSettings((prev) =>
+          prev
+            ? { ...prev, mode: detail.mode, cluster: detail.cluster }
+            : prev,
+        );
+        clientCache.setSettings({
+          ...(clientCache.getSettings() ?? {
+            mode: detail.mode,
+            cluster: detail.cluster,
+            rpcConfigured: { mainnet: true, devnet: true, active: true },
+            canEditMode: true,
+            lockedMode: null,
+            supportedCollections: [],
+          }),
+          mode: detail.mode,
+          cluster: detail.cluster,
+        });
+      }
       void refreshAssets(true);
       void refreshTeam();
     };
-    window.addEventListener('das-settings-changed', onRefresh);
-    window.addEventListener('balance-refresh', onRefresh);
+    window.addEventListener(DAS_SETTINGS_CHANGED, onRefresh);
     return () => {
-      window.removeEventListener('das-settings-changed', onRefresh);
-      window.removeEventListener('balance-refresh', onRefresh);
+      window.removeEventListener(DAS_SETTINGS_CHANGED, onRefresh);
     };
+  }, [refreshAssets, refreshTeam]);
+
+  useEffect(() => {
+    const onBalanceRefresh = () => {
+      void refreshAssets(true);
+      void refreshTeam();
+    };
+    window.addEventListener('balance-refresh', onBalanceRefresh);
+    return () => window.removeEventListener('balance-refresh', onBalanceRefresh);
   }, [refreshAssets, refreshTeam]);
 
   const value = useMemo<AppDataCtx>(
@@ -125,12 +174,13 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       teamIds,
       settings,
       syncing,
+      assetsError,
       refreshAssets,
       refreshTeam,
       refreshSettings,
       setTeamIds,
     }),
-    [assets, teamIds, settings, syncing, refreshAssets, refreshTeam, refreshSettings],
+    [assets, teamIds, settings, syncing, assetsError, refreshAssets, refreshTeam, refreshSettings],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

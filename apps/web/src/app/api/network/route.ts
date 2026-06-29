@@ -1,19 +1,22 @@
 import { NextResponse } from 'next/server';
 import { clusterForNetwork } from '@battler/server-kit';
 import { getEffectiveDasSettings } from '@battler/ingest';
+import {
+  getNetworkRouteCache,
+  NETWORK_ROUTE_CACHE_MS,
+  setNetworkRouteCache,
+} from '@/lib/server/networkCache';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-
-let cached: { at: number; body: { mode: string; cluster: string; onChain: boolean } } | undefined;
-const CACHE_MS = 10_000;
 
 /**
  * GET /api/network — public, unauthenticated view of the active data source.
  */
 export async function GET() {
   const now = Date.now();
-  if (cached && now - cached.at < CACHE_MS) {
+  const cached = getNetworkRouteCache();
+  if (cached && now - cached.at < NETWORK_ROUTE_CACHE_MS) {
     return NextResponse.json(cached.body, {
       headers: { 'Cache-Control': 'public, max-age=10, stale-while-revalidate=30' },
     });
@@ -26,7 +29,7 @@ export async function GET() {
       cluster: clusterForNetwork(eff.mode),
       onChain: true as const,
     };
-    cached = { at: now, body };
+    setNetworkRouteCache({ at: now, body });
     return NextResponse.json(body, {
       headers: { 'Cache-Control': 'public, max-age=10, stale-while-revalidate=30' },
     });

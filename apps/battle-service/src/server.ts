@@ -114,7 +114,11 @@ export async function createServer() {
     httpServer,
     { cors: { origin: cfg.webOrigin, credentials: true } },
   );
-  io.adapter(createAdapter(newRedisConnection(), newRedisConnection()));
+  if (await pingRedis(3_000)) {
+    io.adapter(createAdapter(newRedisConnection(), newRedisConnection()));
+  } else {
+    logger.warn('[battle-service] Redis unavailable — Socket.IO single-instance mode (set REDIS_URL for scale-out)');
+  }
   io.use(socketAuth);
 
   const rooms = new RoomManager(io, settlement);

@@ -1,22 +1,39 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useSession } from '@/components/Providers';
+import { useSession, useNetwork } from '@/components/Providers';
 import { useAppData } from '@/components/AppDataProvider';
 import { CardTile } from '@/components/CardTile';
 import { UnsupportedTile } from '@/components/UnsupportedTile';
 import { PageShell, PageHero, EmptyState, Button, Badge } from '@/components/ui';
 import { StaggerChildren, StaggerItem, HoverLift } from '@/components/motion';
+import { apiClient } from '@/lib/api';
 
 type Sort = 'name' | 'level' | 'rarity';
 
 export default function CollectionPage() {
-  const { signedIn } = useSession();
-  const { assets: data, syncing, refreshAssets } = useAppData();
+  const { signedIn, pubkey: walletPubkey, signIn, signingIn } = useSession();
+  const network = useNetwork();
+  const { assets: data, syncing, assetsError, refreshAssets } = useAppData();
   const [err, setErr] = useState<string | null>(null);
+  const [authPubkey, setAuthPubkey] = useState<string | null>(null);
   const [sort, setSort] = useState<Sort>('level');
   const [selectedSet, setSelectedSet] = useState<string>('all');
+
+  useEffect(() => {
+    if (!signedIn) {
+      setAuthPubkey(null);
+      return;
+    }
+    apiClient
+      .balance()
+      .then((b) => setAuthPubkey(b.pubkey))
+      .catch(() => setAuthPubkey(null));
+  }, [signedIn]);
+
+  const walletMismatch =
+    !!walletPubkey && !!authPubkey && walletPubkey !== authPubkey;
 
   const sets = useMemo(() => {
     if (!data) return [];
@@ -58,6 +75,9 @@ export default function CollectionPage() {
 
   const unsupported = data?.unsupported ?? [];
   const total = (data?.cards.length ?? 0) + unsupported.length;
+  const onDevnet = network?.mode === 'devnet';
+  const showDevnetHint =
+    onDevnet && data && total === 0 && !syncing && !walletMismatch;
 
   return (
     <PageShell stickers={3}>
@@ -76,10 +96,32 @@ export default function CollectionPage() {
             <Button variant="secondary" size="sm" onClick={refresh} disabled={syncing}>
               {syncing ? 'Syncing…' : 'Sync chain'}
             </Button>
-            {err && <Badge style={{ color: 'var(--danger)', borderColor: 'var(--danger)' }}>{err}</Badge>}
+            {(err || assetsError) && (
+              <Badge style={{ color: 'var(--danger)', borderColor: 'var(--danger)' }}>
+                {err ?? assetsError}
+              </Badge>
+            )}
           </>
         }
       />
+
+      {walletMismatch && (
+        <div className="alert warn" style={{ marginBottom: 16 }}>
+          Your connected wallet ({walletPubkey.slice(0, 4)}…{walletPubkey.slice(-4)}) doesn&apos;t match
+          the signed-in account ({authPubkey!.slice(0, 4)}…{authPubkey!.slice(-4)}).
+          {' '}<button className="btn ghost sm" type="button" onClick={() => void signIn()} disabled={signingIn}>
+            {signingIn ? 'Signing…' : 'Sign in again'}
+          </button>
+        </div>
+      )}
+
+      {showDevnetHint && (
+        <div className="alert" style={{ marginBottom: 16 }}>
+          The app is on <strong>devnet</strong> for public testing. Mainnet Phygitals cNFTs in your wallet
+          won&apos;t appear here — buy from the <Link href="/market">devnet marketplace</Link>, use{' '}
+          <Link href="/add-card">Add card</Link>, or airdrop devnet SOL and sync after you hold devnet cNFTs.
+        </div>
+      )}
 
       {!data ? (
         <div className="grid skeleton-grid" aria-hidden>
@@ -114,7 +156,11 @@ export default function CollectionPage() {
           {cards.length === 0 && unsupported.length === 0 ? (
             <EmptyState
               title="No cards yet"
-              description="Buy from the devnet market, add a card manually, or sync after acquiring cNFTs."
+              description={
+                onDevnet
+                  ? 'On devnet, cards come from the marketplace, Add card, or cNFTs already in this wallet on devnet — not mainnet Phygitals.'
+                  : 'Sync after acquiring supported Phygitals cNFTs in your wallet.'
+              }
               actions={
                 <>
                   <Button href="/market" variant="accent">Marketplace</Button>

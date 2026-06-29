@@ -38,9 +38,14 @@ async function api<T>(path: string, init: RequestInit = {}, timeoutMs = 20_000):
         if (typeof window !== 'undefined') window.dispatchEvent(new Event('session-expired'));
         throw new Error('Your session expired — please sign in again.');
       }
+      const isLocal =
+        typeof window !== 'undefined' &&
+        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
       const hint =
         res.status === 500 && !err
-          ? 'Backend offline — start Postgres with `pnpm dev:postgres` (Redis is optional), then refresh.'
+          ? isLocal
+            ? 'Backend offline — start Postgres with `pnpm dev:postgres` (Redis is optional), then refresh.'
+            : 'Backend offline — DATABASE_URL must point to hosted Postgres on Vercel (Neon/Supabase). Run db/schema.sql once, redeploy, then refresh.'
           : err ?? `Request failed: ${res.status}`;
       throw new Error(hint);
     }
@@ -75,6 +80,8 @@ export interface DasSettingsResponse {
     active: boolean;
   };
   canEditMode: boolean;
+  /** Deprecated — always null; network is switchable in Settings. */
+  lockedMode?: DasNetwork | null;
   supportedCollections: string[];
 }
 

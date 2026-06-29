@@ -87,7 +87,7 @@ export default function AddCardPage() {
       setQuery('');
       setResults([]);
       refreshList();
-      window.dispatchEvent(new Event('das-settings-changed'));
+      window.dispatchEvent(new Event('balance-refresh'));
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Failed to add card');
     } finally {

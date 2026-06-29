@@ -17,6 +17,7 @@ import bs58 from 'bs58';
 import { clientConfig, endpointForCluster } from '@/lib/clientConfig';
 import { apiClient, clearToken, getToken, setToken, type DasNetwork } from '@/lib/api';
 import { warmSessionCaches } from '@/lib/clientCache';
+import { DAS_SETTINGS_CHANGED, readNetworkChangeDetail } from '@/lib/networkEvents';
 import '@solana/wallet-adapter-react-ui/styles.css';
 
 /* ---------------- network (data source / cluster) ---------------- */
@@ -136,6 +137,14 @@ function readCachedNetwork(): NetworkInfo | null {
   }
 }
 
+function persistNetworkCache(n: NetworkInfo): void {
+  try {
+    sessionStorage.setItem(NETWORK_CACHE_KEY, JSON.stringify(n));
+  } catch {
+    /* quota */
+  }
+}
+
 export function Providers({ children }: { children: ReactNode }) {
   const wallets = useMemo(() => [new PhantomWalletAdapter(), new SolflareWalletAdapter()], []);
   const [network, setNetwork] = useState<NetworkInfo | null>(() => readCachedNetwork() ?? defaultNetwork());
@@ -148,21 +157,26 @@ export function Providers({ children }: { children: ReactNode }) {
         .then((n) => {
           if (!alive) return;
           setNetwork(n);
-          try {
-            sessionStorage.setItem(NETWORK_CACHE_KEY, JSON.stringify(n));
-          } catch {
-            /* quota */
-          }
+          persistNetworkCache(n);
         })
         .catch(() => {
           if (alive) setNetwork((prev) => prev ?? defaultNetwork());
         });
     };
+    const onSettingsChanged = (ev: Event) => {
+      const detail = readNetworkChangeDetail(ev);
+      if (detail) {
+        const optimistic: NetworkInfo = { mode: detail.mode, cluster: detail.cluster, onChain: true };
+        setNetwork(optimistic);
+        persistNetworkCache(optimistic);
+      }
+      load();
+    };
     load();
-    window.addEventListener('das-settings-changed', load);
+    window.addEventListener(DAS_SETTINGS_CHANGED, onSettingsChanged);
     return () => {
       alive = false;
-      window.removeEventListener('das-settings-changed', load);
+      window.removeEventListener(DAS_SETTINGS_CHANGED, onSettingsChanged);
     };
   }, []);
 

@@ -9,6 +9,7 @@ import { PageShell, PageHero, Panel, Button, Pill } from '@/components/ui';
 import { Icon } from '@/components/Icon';
 import { UsernamePanel } from '@/components/social/UsernamePanel';
 import { getPrefs, setPref, DEFAULT_PREFS, type Prefs } from '@/lib/prefs';
+import { dispatchNetworkChange } from '@/lib/networkEvents';
 
 const NETWORKS: { id: DasNetwork; label: string; blurb: string }[] = [
   { id: 'devnet', label: 'Devnet', blurb: 'Test with devnet SOL — buy trending cards from the limited-stock marketplace, or add cards manually.' },
@@ -31,24 +32,43 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (settings) setMode(settings.mode);
-  }, [settings]);
+  }, [settings?.mode]);
 
   useEffect(() => {
     if (signedIn) void refreshSettings();
   }, [signedIn, refreshSettings]);
 
-  const save = async () => {
+  const applyNetwork = async (next: DasNetwork) => {
+    if (saving || next === settings?.mode) return;
+    const rpcOk =
+      next === 'mainnet' ? settings?.rpcConfigured.mainnet : settings?.rpcConfigured.devnet;
+    if (!rpcOk) {
+      setErr(`Server missing Helius config for ${next}.`);
+      return;
+    }
+
+    setMode(next);
+    dispatchNetworkChange(next);
     setSaving(true);
     setStatus(null);
     setErr(null);
     try {
-      const s = await apiClient.setSettings({ mode });
+      const s = await apiClient.setSettings({ mode: next });
       setMode(s.mode);
       void refreshSettings();
-      setStatus(`Saved — now on ${s.mode}.`);
-      window.dispatchEvent(new Event('das-settings-changed'));
+      setStatus(`Switched to ${s.mode}. Wallet and collection now use ${s.cluster}.`);
+      dispatchNetworkChange(s.mode);
+      try {
+        sessionStorage.removeItem('battler_assets_v1');
+      } catch {
+        /* quota */
+      }
     } catch (e) {
-      setErr(e instanceof Error ? e.message : 'Save failed');
+      setErr(e instanceof Error ? e.message : 'Switch failed');
+      if (settings) {
+        setMode(settings.mode);
+        dispatchNetworkChange(settings.mode);
+      }
     } finally {
       setSaving(false);
     }
@@ -59,7 +79,7 @@ export default function SettingsPage() {
     setProbe(null);
     setErr(null);
     try {
-      const r = await apiClient.testSettings({ mode });
+      const r = await apiClient.testSettings({ mode: shownMode });
       setProbe(r);
     } catch (e) {
       setProbe({ ok: false, latencyMs: 0, error: e instanceof Error ? e.message : 'Probe failed' });
@@ -85,8 +105,8 @@ export default function SettingsPage() {
     );
   }
 
-  const dirty = mode !== settings.mode;
-  const activeRpcOk = mode === 'mainnet' ? settings.rpcConfigured.mainnet : settings.rpcConfigured.devnet;
+  const shownMode = saving ? mode : (settings?.mode ?? mode);
+  const activeRpcOk = shownMode === 'mainnet' ? settings.rpcConfigured.mainnet : settings.rpcConfigured.devnet;
 
   return (
     <PageShell stickers={3}>
@@ -121,10 +141,10 @@ export default function SettingsPage() {
               key={n.id}
               type="button"
               role="tab"
-              aria-selected={mode === n.id}
-              className={`net-card ${n.id} ${mode === n.id ? 'on' : ''}`}
-              onClick={() => setMode(n.id)}
-              disabled={!settings.canEditMode}
+              aria-selected={shownMode === n.id}
+              className={`net-card ${n.id} ${shownMode === n.id ? 'on' : ''}`}
+              onClick={() => void applyNetwork(n.id)}
+              disabled={saving}
             >
               <span className="net-card-head">
                 <span className={`dot ${n.id}`} />
@@ -138,13 +158,7 @@ export default function SettingsPage() {
 
         {!activeRpcOk && (
           <div className="alert warn">
-            Server missing Helius config for <strong>{mode}</strong>. Set <code>HELIUS_API_KEY</code> in your hosting environment.
-          </div>
-        )}
-
-        {!settings.canEditMode && (
-          <div className="alert warn">
-            Network mode is locked in production (defaults to mainnet via server config).
+            Server missing Helius config for <strong>{shownMode}</strong>. Set <code>HELIUS_API_KEY</code> in your hosting environment.
           </div>
         )}
 
@@ -167,14 +181,14 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {mode === 'devnet' && (
+        {shownMode === 'devnet' && (
           <div className="alert info">
             Devnet marketplace uses limited stock — buy trending cards with devnet SOL, or{' '}
             <Link href="/add-card">add cards manually</Link>.
           </div>
         )}
 
-        {mode === 'mainnet' && (
+        {shownMode === 'mainnet' && (
           <div className="alert warn">
             Mainnet shows cards you already own. To buy new cards, visit{' '}
             <a href="https://magiceden.io/marketplace/phygitals" target="_blank" rel="noopener noreferrer">Magic Eden</a>
@@ -202,10 +216,7 @@ export default function SettingsPage() {
         {err && <div className="alert danger">{err}</div>}
 
         <div className="row">
-          <Button variant="accent" onClick={() => void save()} disabled={!settings.canEditMode || saving || !dirty || !activeRpcOk}>
-            {saving ? 'Saving…' : 'Save network'}
-          </Button>
-          {!settings.canEditMode && <span className="muted" style={{ fontSize: 13 }}>Locked in production.</span>}
+          {saving && <span className="muted" style={{ fontSize: 13 }}>Switching network…</span>}
           <span className="spacer" />
           <span className="muted" style={{ fontSize: 12 }}>cluster: {settings.cluster}</span>
         </div>

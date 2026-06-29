@@ -9,6 +9,7 @@ import {
 import { getEffectiveDasSettings, resetProviderCache, type EffectiveDasSettings } from '@battler/ingest';
 import { requireAuth } from '@/lib/server/session';
 import { enforceRateLimit } from '@/lib/server/ratelimit';
+import { resetNetworkRouteCache } from '@/lib/server/networkCache';
 
 export const runtime = 'nodejs';
 
@@ -23,7 +24,8 @@ function snapshot(eff: EffectiveDasSettings) {
       devnet: !!cfg.heliusDevnetRpcUrl,
       active: !!eff.activeRpcUrl,
     },
-    canEditMode: !cfg.isProd,
+    canEditMode: true,
+    lockedMode: null,
     supportedCollections: [...cfg.supportedCollections],
   };
 }
@@ -47,9 +49,6 @@ export async function PUT(req: NextRequest) {
   const limited = await enforceRateLimit(req, 'settings-put', 10, 60_000);
   if (limited) return limited;
   const cfg = loadServerConfig();
-  if (cfg.isProd) {
-    return NextResponse.json({ error: 'Network mode is locked in production' }, { status: 403 });
-  }
 
   const body = (await req.json().catch(() => null)) as {
     mode?: string;
@@ -78,5 +77,6 @@ export async function PUT(req: NextRequest) {
 
   await setDasSettingsMode(mode as DasNetwork);
   resetProviderCache();
+  resetNetworkRouteCache();
   return NextResponse.json(snapshot(await getEffectiveDasSettings()));
 }

@@ -1,5 +1,4 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { loadServerConfig } from '@battler/server-kit';
 import { mockCards } from '@battler/repositories';
 import { getEffectiveDasSettings } from '@battler/ingest';
 import { normalizeCardName } from '@battler/card-parser';
@@ -21,8 +20,6 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const auth = requireAuth(req);
   if (auth instanceof NextResponse) return auth;
-  const cfg = loadServerConfig();
-  if (cfg.isProd) return NextResponse.json({ error: 'disabled in production' }, { status: 403 });
   if ((await getEffectiveDasSettings()).mode !== 'devnet') {
     return NextResponse.json({ error: 'Adding cards only works in devnet mode' }, { status: 400 });
   }

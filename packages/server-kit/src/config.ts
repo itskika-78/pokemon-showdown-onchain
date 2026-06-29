@@ -29,6 +29,8 @@ const EnvSchema = z.object({
   HELIUS_DEVNET_RPC_URL: z.string().optional(),
   HELIUS_API_KEY: z.string().optional(),
   USE_MOCK_DAS: envBool(false),
+  /** Default network when Redis has no override (Settings tab can switch at runtime). */
+  DAS_MODE: z.enum(['devnet', 'mainnet']).default('devnet'),
   PHYGITALS_COLLECTION_MINTS: z.string().default('BSG6DyEihFFtfvxtL9mKYsvTwiZXB1rq5gARMTJC2xAM'),
   PLATFORM_FEE_BPS: z.coerce.number().int().min(0).max(10_000).default(250),
   BATTLE_FORMAT: z.string().default('gen9customgame'),
@@ -59,6 +61,8 @@ export interface ServerConfig {
   heliusDevnetRpcUrl?: string;
   heliusApiKey?: string;
   useMockDas: boolean;
+  /** Default network when Redis has no user override (see Settings). */
+  dasMode: 'devnet' | 'mainnet';
   supportedCollections: Set<string>;
   platformFeeBps: number;
   battleFormat: string;
@@ -135,11 +139,12 @@ export function loadServerConfig(env: NodeJS.ProcessEnv = process.env): ServerCo
     heliusDevnetRpcUrl: heliusResolved.devnet,
     heliusApiKey: e.HELIUS_API_KEY,
     useMockDas: e.USE_MOCK_DAS,
+    dasMode: e.DAS_MODE,
     supportedCollections,
     platformFeeBps: e.PLATFORM_FEE_BPS,
     battleFormat: e.BATTLE_FORMAT,
     derivationVersion: e.DERIVATION_VERSION,
-    battlePort: e.BATTLE_SERVICE_PORT,
+    battlePort: Number(process.env.PORT) || e.BATTLE_SERVICE_PORT,
     webOrigin: e.WEB_ORIGIN,
     logSigning: { privateKeyPem: e.LOG_SIGNING_PRIVATE_KEY, secret: e.LOG_SIGNING_SECRET },
     turnTimerSeconds: e.TURN_TIMER_SECONDS,

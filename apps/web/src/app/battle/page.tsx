@@ -5,7 +5,6 @@ import { io, type Socket } from 'socket.io-client';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
 import type { ClientToServerEvents, ServerToClientEvents, Negotiation, WagerTerms } from '@battler/core';
-import { clientConfig } from '@/lib/clientConfig';
 import { apiClient, getToken } from '@/lib/api';
 import { useAppData } from '@/components/AppDataProvider';
 import { useSession } from '@/components/Providers';
@@ -72,6 +71,34 @@ export default function BattlePage() {
   const [nego, setNego] = useState<NegoView | null>(null);
   const [activeWager, setActiveWager] = useState<WagerTerms>({ type: 'crypto', amount: 50_000_000 });
   const [busy, setBusy] = useState(false);
+  const [battleWsUrl, setBattleWsUrl] = useState<string | null>(null);
+
+  // Resolve battle-service URL at runtime (server env BATTLE_WS_PUBLIC_URL — no rebuild needed).
+  useEffect(() => {
+    if (!signedIn) {
+      setBattleWsUrl(null);
+      return;
+    }
+    let alive = true;
+    fetch('/api/config')
+      .then((r) => r.json() as Promise<{ wsUrl?: string | null }>)
+      .then((cfg) => {
+        if (!alive) return;
+        const url = cfg.wsUrl?.trim() || null;
+        setBattleWsUrl(url);
+        if (!url) {
+          setStatus(
+            'Battle server offline — deploy apps/battle-service (see render.yaml) and set BATTLE_WS_PUBLIC_URL on Vercel.',
+          );
+        }
+      })
+      .catch(() => {
+        if (alive) setBattleWsUrl(null);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [signedIn]);
 
   // Preselect an opponent passed from the Friends tab (/battle?opp=<addr>&name=<username>).
   useEffect(() => {
@@ -222,17 +249,29 @@ export default function BattlePage() {
 
   // Persistent socket: connect on sign-in so the lobby can receive challenges + matches.
   useEffect(() => {
-    if (!signedIn) return;
+    if (!signedIn || !battleWsUrl) return;
     const token = getToken();
     if (!token) return;
-    const socket: BattleSocket = io(clientConfig.wsUrl, { auth: { token }, transports: ['websocket'] });
+    const socket: BattleSocket = io(battleWsUrl, {
+      auth: { token },
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: 8,
+    });
     socketRef.current = socket;
 
     socket.on('connect', () => {
+      setStatus('Connected to battle server');
       if (pubkey) void pollPendingChallenges(pubkey);
     });
 
-    socket.on('connect_error', (e) => setStatus('Connection failed: ' + e.message));
+    socket.on('disconnect', (reason) => {
+      if (reason === 'io server disconnect') setStatus('Disconnected from battle server');
+    });
+
+    socket.on('connect_error', () => {
+      setStatus('Cannot reach battle server — is apps/battle-service running?');
+    });
     socket.on('queue:waiting', () => setStatus('Searching for an opponent…'));
     socket.on('battle:matched', (p) => {
       setSearching(false);
@@ -307,7 +346,7 @@ export default function BattlePage() {
 
     return () => { socket.disconnect(); socketRef.current = null; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [signedIn, pubkey, pollPendingChallenges]);
+  }, [signedIn, battleWsUrl, pubkey, pollPendingChallenges]);
 
   // Poll for challenges missed while the socket was down or the tab was closed.
   useEffect(() => {

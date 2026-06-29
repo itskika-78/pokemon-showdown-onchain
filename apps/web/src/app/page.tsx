@@ -33,13 +33,6 @@ const STEPS = [
   { n: '04', h: 'Win the pot', p: 'Take the SOL — or the staked card. Settlement runs behind one interface.' },
 ] as const;
 
-const STATS = [
-  { v: '6v6', l: 'Showdown battles' },
-  { v: '100%', l: 'Server-authoritative' },
-  { v: 'cNFT', l: 'True ownership' },
-  { v: '◎ SOL', l: 'Escrowed wagers' },
-] as const;
-
 export default function HomePage() {
   const network = useNetwork();
   const net = network?.mode === 'mainnet' ? 'MAINNET' : 'DEVNET';
@@ -126,26 +119,6 @@ export default function HomePage() {
                 <p className="ow-step-p">{s.p}</p>
               </div>
             ))}
-          </div>
-        </section>
-
-        {/* stats */}
-        <section className="ow-sec" style={{ paddingTop: 0 }}>
-          <div className="ow-stats">
-            {STATS.map((s) => (
-              <div className="ow-stat" key={s.l}><b>{s.v}</b><span>{s.l}</span></div>
-            ))}
-          </div>
-        </section>
-
-        {/* finale */}
-        <section className="ow-finale">
-          <p className="ow-eyebrow" style={{ color: '#d8cfba' }}><span className="sq" /> READY PLAYER ONE</p>
-          <h2>Your card is a monster<span className="dot">.</span></h2>
-          <p>Connect your wallet, draft your six, and step into the 16-bit arena — friendly ladders or real SOL wagers on the line.</p>
-          <div className="ow-cta" style={{ justifyContent: 'center' }}>
-            <Link href="/login" className="ow-btn ow-btn-red"><Icon name="bolt" size={16} /> Connect wallet</Link>
-            <Link href="/battle" className="ow-btn ow-btn-ghost" style={{ color: 'var(--ow-ink)' }}><Icon name="sword" size={16} /> Enter arena</Link>
           </div>
         </section>
 

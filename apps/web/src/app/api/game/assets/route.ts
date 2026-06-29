@@ -46,7 +46,11 @@ export async function GET(req: NextRequest) {
   if (!refresh) {
     const cached = await getCachedAssets(auth.pubkey);
     if (cached) {
-      return NextResponse.json(JSON.parse(cached), { headers: CACHE_HEADERS });
+      const parsed = JSON.parse(cached) as { cards?: unknown[]; unsupported?: unknown[] };
+      // Never serve a cached empty wallet — devnet purchases / add-card may have landed since.
+      if ((parsed.cards?.length ?? 0) > 0 || (parsed.unsupported?.length ?? 0) > 0) {
+        return NextResponse.json(parsed, { headers: CACHE_HEADERS });
+      }
     }
 
     try {

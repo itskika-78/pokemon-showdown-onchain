@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { isDasNetwork, loadServerConfig } from '@battler/server-kit';
+import { isDasNetwork } from '@battler/server-kit';
 import { getEffectiveDasSettings } from '@battler/ingest';
 import { probeDasEndpoint } from '@battler/das';
 import { requireAuth } from '@/lib/server/session';
@@ -16,8 +16,6 @@ export async function POST(req: NextRequest) {
   if (auth instanceof NextResponse) return auth;
   const limited = await enforceRateLimit(req, 'settings-test', 12, 60_000);
   if (limited) return limited;
-  const cfg = loadServerConfig();
-  if (cfg.isProd) return NextResponse.json({ error: 'Connection test disabled in production' }, { status: 403 });
 
   const body = (await req.json().catch(() => null)) as { mode?: string; rpcUrl?: string } | null;
 
