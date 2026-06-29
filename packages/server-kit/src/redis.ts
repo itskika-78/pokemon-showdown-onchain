@@ -134,11 +134,20 @@ export function getRedisMode(): 'redis' | 'memory' | 'pending' {
 
 /** A second connection — Socket.IO's Redis adapter needs a dedicated pub/sub pair. */
 export function newRedisConnection(): Redis {
-  return attachErrorHandler(new Redis(loadServerConfig().redisUrl), 'pubsub');
+  return attachErrorHandler(
+    new Redis(loadServerConfig().redisUrl, {
+      maxRetriesPerRequest: null,
+      enableOfflineQueue: true,
+      retryStrategy: (times) => Math.min(times * 200, 3_000),
+    }),
+    'pubsub',
+  );
 }
 
 export async function pingRedis(timeoutMs = 10_000): Promise<boolean> {
   try {
+    await getClientPromise();
+    if (clientMode !== 'redis') return false;
     const pong = await Promise.race([
       getRedis().ping(),
       new Promise<never>((_, reject) => {
