@@ -40,6 +40,9 @@ services:
         sync: false
       - key: TREASURY_WALLET
         sync: false
+      # Custodial devnet/mainnet SOL escrow hot wallet (base58 or JSON byte array)
+      - key: ESCROW_SECRET_KEY
+        sync: false
       # Optional — enables Socket.IO adapter across multiple instances
       - key: REDIS_URL
         sync: false

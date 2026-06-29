@@ -122,6 +122,9 @@ async function main() {
     { key: 'TREASURY_WALLET', value: env.TREASURY_WALLET },
   ];
   if (env.REDIS_URL?.trim()) envVars.push({ key: 'REDIS_URL', value: env.REDIS_URL });
+  const escrowPath = resolve(root, '.runtime/escrow-devnet.json');
+  const escrowSecret = env.ESCROW_SECRET_KEY?.trim() || (existsSync(escrowPath) ? readFileSync(escrowPath, 'utf8').trim() : '');
+  if (escrowSecret) envVars.push({ key: 'ESCROW_SECRET_KEY', value: escrowSecret });
 
   const payload = {
     type: 'web_service',

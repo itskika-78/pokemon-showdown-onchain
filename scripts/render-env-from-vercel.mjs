@@ -47,6 +47,7 @@ const fields = {
   HELIUS_RPC_URL: env.HELIUS_RPC_URL,
   HELIUS_DEVNET_RPC_URL: env.HELIUS_DEVNET_RPC_URL,
   TREASURY_WALLET: env.TREASURY_WALLET,
+  ESCROW_SECRET_KEY: env.ESCROW_SECRET_KEY || '(run: node scripts/sync-render-escrow.mjs — or paste JSON array from .runtime/escrow-devnet.json)',
   REDIS_URL: env.REDIS_URL || '(optional — leave blank for single-instance mode)',
 };
 

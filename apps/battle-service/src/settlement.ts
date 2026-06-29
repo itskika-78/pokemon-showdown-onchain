@@ -12,6 +12,7 @@ import {
 import type { SettlementProvider, SettlementResult, SettlementOutcome } from '@battler/core';
 import { loadServerConfig, clusterForNetwork, logger } from '@battler/server-kit';
 import { getEffectiveDasSettings } from '@battler/ingest';
+import { matches as matchRepo } from '@battler/repositories';
 import { PgEscrowStore, PgCardEscrowStore } from './escrowStore.js';
 
 /**
@@ -50,6 +51,8 @@ export class NetworkAwareSettlement implements SettlementProvider {
     const eff = await getEffectiveDasSettings();
     const onChain = !!eff.activeRpcUrl;
     const rpcUrl = clusterForNetwork(eff.mode) === 'mainnet-beta' ? eff.heliusRpcUrl : eff.heliusDevnetRpcUrl;
+    const match = await matchRepo.getMatch(result.matchId);
+    const cryptoWager = match?.wager?.type === 'crypto' && (match.wager.amount ?? 0) > 0;
 
     if (onChain && escrowKeypair && rpcUrl && cfg.treasuryWallet) {
       const cluster = clusterForNetwork(eff.mode);
@@ -70,8 +73,12 @@ export class NetworkAwareSettlement implements SettlementProvider {
         return await svc.settle(result);
       } catch (e) {
         logger.error({ err: e, matchId: result.matchId }, 'on-chain settle failed');
-        // Fall through to the ledger so the match still records a result.
+        if (cryptoWager) throw e;
       }
+    }
+    if (cryptoWager && onChain) {
+      logger.error({ matchId: result.matchId }, 'crypto match could not settle on-chain — refusing ledger fallback');
+      return { matchId: result.matchId, applied: false, alreadySettled: false, feeTaken: 0, ledgerEntries: [] };
     }
     return this.ledger.settle(result);
   }

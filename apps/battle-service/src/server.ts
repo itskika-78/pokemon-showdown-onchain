@@ -301,8 +301,20 @@ export async function createServer() {
     const eff = await getEffectiveDasSettings().catch(() => null);
     const cluster = eff ? clusterForNetwork(eff.mode) : 'devnet';
     const rpcUrl = (cluster === 'mainnet-beta' ? eff?.heliusRpcUrl : eff?.heliusDevnetRpcUrl) ?? '';
-    const onChainWager =
-      n.wager.type === 'crypto' && (n.wager.amount ?? 0) > 0 && !!eff?.activeRpcUrl && !!escrowPubkey && !!rpcUrl;
+    const wantsOnChainCrypto =
+      n.wager.type === 'crypto' && (n.wager.amount ?? 0) > 0 && !!eff?.activeRpcUrl;
+    if (wantsOnChainCrypto && (!escrowPubkey || !rpcUrl)) {
+      const msg =
+        'On-chain SOL escrow is not configured on the battle server — SOL wagers are unavailable until escrow is enabled.';
+      for (const who of [n.challengerPubkey, n.challengeePubkey]) {
+        io.to(`user:${who}`).emit('battle:error', { message: msg });
+      }
+      await challenges.setChallengeStatus(challengeId, 'REJECTED');
+      logger.error({ challengeId, escrowConfigured: !!escrowPubkey, rpcUrl: !!rpcUrl }, 'crypto wager blocked — no escrow');
+      return;
+    }
+
+    const onChainWager = wantsOnChainCrypto && !!escrowPubkey && !!rpcUrl;
 
     await rooms.create(
       {
@@ -399,6 +411,7 @@ export async function createServer() {
         uptime: Math.floor((Date.now() - START) / 1000),
         redis: redis ? 'ok' : 'err',
         postgres: postgres ? 'ok' : 'err',
+        escrow: escrowPubkey ? 'ok' : 'missing',
       };
       res.writeHead(healthy ? 200 : 503, { 'content-type': 'application/json' });
       res.end(JSON.stringify(body));
