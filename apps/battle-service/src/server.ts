@@ -114,7 +114,8 @@ export async function createServer() {
     httpServer,
     { cors: { origin: cfg.webOrigin, credentials: true } },
   );
-  if (await pingRedis(3_000)) {
+  const redisConfigured = !!process.env.REDIS_URL?.trim();
+  if (redisConfigured && (await pingRedis(3_000))) {
     io.adapter(createAdapter(newRedisConnection(), newRedisConnection()));
   } else {
     logger.warn('[battle-service] Redis unavailable — Socket.IO single-instance mode (set REDIS_URL for scale-out)');
