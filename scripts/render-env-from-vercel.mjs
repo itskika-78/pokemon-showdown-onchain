@@ -32,7 +32,13 @@ function parseEnv(text) {
 
 const sources = [envPath, pullPath].filter((p) => existsSync(p));
 const env = {};
-for (const p of sources) Object.assign(env, parseEnv(readFileSync(p, 'utf8')));
+for (const p of sources) {
+  const parsed = parseEnv(readFileSync(p, 'utf8'));
+  for (const [k, v] of Object.entries(parsed)) {
+    if (v?.trim()) env[k] = v;
+    else if (!(k in env)) env[k] = v;
+  }
+}
 
 const fields = {
   DATABASE_URL: env.DATABASE_URL || '(copy from Vercel → Settings → DATABASE_URL → reveal)',
