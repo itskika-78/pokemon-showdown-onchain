@@ -392,13 +392,15 @@ export async function createServer() {
 
     if (req.method === 'GET' && url.pathname === '/health') {
       const [redis, postgres] = await Promise.all([pingRedis(), pingPostgres()]);
+      const redisOptional = !process.env.REDIS_URL?.trim();
+      const healthy = postgres && (redis || redisOptional);
       const body = {
-        status: redis && postgres ? 'ok' : 'degraded',
+        status: healthy ? 'ok' : 'degraded',
         uptime: Math.floor((Date.now() - START) / 1000),
         redis: redis ? 'ok' : 'err',
         postgres: postgres ? 'ok' : 'err',
       };
-      res.writeHead(redis && postgres ? 200 : 503, { 'content-type': 'application/json' });
+      res.writeHead(healthy ? 200 : 503, { 'content-type': 'application/json' });
       res.end(JSON.stringify(body));
       return;
     }
