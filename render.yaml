@@ -14,7 +14,7 @@ services:
     runtime: node
     region: oregon
     plan: free
-    buildCommand: corepack enable && corepack prepare pnpm@11.1.3 --activate && pnpm install
+    buildCommand: npm install -g pnpm@11.1.3 && pnpm install
     startCommand: pnpm --filter @battler/battle-service start
     healthCheckPath: /health
     envVars:

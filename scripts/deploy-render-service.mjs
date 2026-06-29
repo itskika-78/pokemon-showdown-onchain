@@ -38,7 +38,13 @@ function loadEnv() {
     resolve(root, 'apps/web/.env.production.pull'),
   ].filter((p) => existsSync(p));
   const env = {};
-  for (const p of paths) Object.assign(env, parseEnv(readFileSync(p, 'utf8')));
+  for (const p of paths) {
+    const parsed = parseEnv(readFileSync(p, 'utf8'));
+    for (const [k, v] of Object.entries(parsed)) {
+      if (v?.trim()) env[k] = v;
+      else if (!(k in env)) env[k] = v;
+    }
+  }
   return env;
 }
 
@@ -124,13 +130,17 @@ async function main() {
     repo: REPO,
     branch: 'main',
     autoDeploy: 'yes',
-    buildCommand:
-      'corepack enable && corepack prepare pnpm@11.1.3 --activate && pnpm install',
-    startCommand: 'pnpm --filter @battler/battle-service start',
-    healthCheckPath: '/health',
-    plan: 'free',
-    region: 'oregon',
     envVars,
+    serviceDetails: {
+      runtime: 'node',
+      plan: 'free',
+      region: 'oregon',
+      healthCheckPath: '/health',
+      envSpecificDetails: {
+        buildCommand: 'npm install -g pnpm@11.1.3 && pnpm install',
+        startCommand: 'pnpm --filter @battler/battle-service start',
+      },
+    },
   };
 
   const created = await api('/services', { method: 'POST', body: JSON.stringify(payload) });
